@@ -36,7 +36,7 @@ export const PlanPicker = ({ plans, presetsUsd, minUsd, maxUsd, kind, plan, amou
 
   return (
     <div className="flex flex-col gap-4">
-      <div role="radiogroup" aria-label="How to pay" className="grid grid-cols-2 gap-1 rounded-full border border-line bg-surface p-1 sm:max-w-sm">
+      <div role="radiogroup" aria-label="How to pay" className="grid grid-cols-2 gap-1 rounded-xl border border-line bg-surface p-1 sm:max-w-xs">
         {(['plan', 'credit'] as const).map((value) => (
           <button
             key={value}
@@ -44,7 +44,7 @@ export const PlanPicker = ({ plans, presetsUsd, minUsd, maxUsd, kind, plan, amou
             role="radio"
             aria-checked={kind === value}
             onClick={() => onKind(value)}
-            className={`min-h-11 rounded-full text-sm font-semibold ${kind === value ? 'bg-white text-ink shadow-sm' : 'text-muted hover:text-ink'}`}
+            className={`min-h-9 rounded-lg text-sm font-medium transition-colors ${kind === value ? 'bg-white text-ink shadow-sm' : 'text-muted hover:text-ink'}`}
           >
             {value === 'plan' ? 'Monthly plan' : 'Buy credit once'}
           </button>
@@ -54,32 +54,31 @@ export const PlanPicker = ({ plans, presetsUsd, minUsd, maxUsd, kind, plan, amou
       {kind === 'plan' ? (
         <fieldset className="flex flex-col gap-2">
           <legend className="sr-only">Plan</legend>
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-white">
             {plans.map((item) => {
               const checked = item.id === plan;
               return (
                 <label
                   key={item.id}
-                  className={`flex min-h-11 cursor-pointer flex-col gap-1 rounded-xl border p-4 transition-colors ${
-                    checked ? 'border-accent bg-accent-soft' : 'border-line bg-white hover:border-ink/40'
-                  }`}
+                  className={`flex min-h-14 cursor-pointer items-center gap-3 px-4 py-3 transition-colors ${checked ? 'bg-accent-soft/70' : 'hover:bg-surface/70'}`}
                 >
-                  <span className="flex items-center justify-between gap-2">
-                    <span className="flex items-center gap-2 font-semibold">
-                      <input
-                        type="radio"
-                        name={`${id}-plan`}
-                        value={item.id}
-                        checked={checked}
-                        onChange={() => onPlan(item.id)}
-                        className="h-4 w-4 accent-[#c2410c]"
-                      />
-                      {item.name}
+                  <input
+                    type="radio"
+                    name={`${id}-plan`}
+                    value={item.id}
+                    checked={checked}
+                    onChange={() => onPlan(item.id)}
+                    className="h-4 w-4 shrink-0 accent-[#c2410c]"
+                  />
+                  <span className="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-3">
+                    <span className="w-20 shrink-0 font-semibold">{item.name}</span>
+                    <span className="text-sm text-muted">
+                      {money(item.includedUsd)} of usage a month · {item.projects} {item.projects === 1 ? 'website' : 'websites'}
                     </span>
-                    <span className="font-mono text-sm font-semibold">{money(item.priceUsd)}/mo</span>
                   </span>
-                  <span className="pl-6 text-sm text-muted">
-                    {money(item.includedUsd)} of usage each month, {item.projects} {item.projects === 1 ? 'project' : 'projects'}
+                  <span className="shrink-0 font-mono text-sm font-semibold">
+                    {money(item.priceUsd)}
+                    <span className="font-sans font-normal text-muted">/mo</span>
                   </span>
                 </label>
               );
@@ -96,7 +95,7 @@ export const PlanPicker = ({ plans, presetsUsd, minUsd, maxUsd, kind, plan, amou
               return (
                 <label
                   key={preset}
-                  className={`inline-flex min-h-11 cursor-pointer items-center rounded-full border px-4 font-mono text-sm font-semibold ${
+                  className={`inline-flex min-h-10 cursor-pointer items-center rounded-lg border px-4 font-mono text-sm font-semibold transition-colors ${
                     checked ? 'border-accent bg-accent-soft text-ink' : 'border-line bg-white hover:border-ink/40'
                   }`}
                 >

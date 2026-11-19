@@ -12,7 +12,7 @@ export const LogoMark = ({ className = '' }: { className?: string }) => (
 export const ByOutrank = ({ className = '' }: { className?: string }) => (
   <a
     href={OUTRANK_URL}
-    className={`inline-flex items-center rounded-full bg-outrank-soft px-2 py-0.5 text-xs font-semibold text-outrank hover:underline ${className}`}
+    className={`inline-flex translate-y-px items-center text-[13px] font-medium whitespace-nowrap text-faint transition-colors hover:text-outrank ${className}`}
   >
     by Outrank
   </a>

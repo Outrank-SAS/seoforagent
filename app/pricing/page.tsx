@@ -109,7 +109,7 @@ const PricingPage = async () => {
                     <td className="p-4 font-mono font-semibold whitespace-nowrap">{money(plan.priceUsd)} a month</td>
                     <td className="p-4 font-mono">{money(plan.includedUsd)}</td>
                     <td className="p-4">{plan.projects}</td>
-                    <td className="p-4">{plan.schedules ? 'Yes, coming soon' : 'No'}</td>
+                    <td className="p-4">{plan.schedules ? 'Coming soon' : 'No'}</td>
                     <td className="p-4">{plan.whiteLabel ? 'Yes' : 'No'}</td>
                   </tr>
                 ))}
@@ -149,14 +149,13 @@ const PricingPage = async () => {
               <li>Every response shows the charge and both balances, so your agent can tell you what things cost.</li>
             </ul>
             <h3 className="mt-4 font-semibold">Always free</h3>
-            <p className="text-sm text-muted">
-              {freeTools.map((name, index) => (
-                <span key={name}>
-                  <code className="font-mono text-ink">{name}</code>
-                  {index < freeTools.length - 1 ? ', ' : ''}
-                </span>
+            <ul className="mt-1 flex flex-wrap gap-1.5" aria-label="Free tools">
+              {freeTools.map((name) => (
+                <li key={name} className="rounded-md border border-line px-2 py-1 font-mono text-xs text-muted">
+                  {name}
+                </li>
               ))}
-            </p>
+            </ul>
           </div>
           <div className="flex flex-col gap-6">
             <h2 className="text-2xl font-semibold">Usage prices</h2>

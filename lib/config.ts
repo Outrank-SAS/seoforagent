@@ -12,6 +12,7 @@ export const MCP_URL = `${SITE_URL}/mcp`;
 export const PUBLIC_API_BASE = `${SITE_URL}/api/v1`;
 export const OUTRANK_URL = 'https://www.outrank.so';
 export const GITHUB_URL = 'https://github.com/Outrank-SAS/seoforagent';
+export const GITHUB_PUBLIC = process.env.NEXT_PUBLIC_GITHUB_PUBLIC === 'true';
 export const SUPPORT_EMAIL = 'support@outrank.so';
 export const KEY_PREFIX = 'sfa_live_';
 export const KEY_PATTERN = /^sfa_live_[A-Za-z0-9_-]{40,60}$/;

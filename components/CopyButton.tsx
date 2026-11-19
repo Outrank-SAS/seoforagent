@@ -57,14 +57,14 @@ export const CopyButton = ({
   };
   const styles =
     variant === 'dark'
-      ? 'border border-white/25 bg-white/10 text-white hover:bg-white/20'
+      ? 'border border-white/15 bg-white/10 text-white hover:bg-white/20'
       : 'border border-line bg-white text-ink hover:bg-surface';
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full px-4 text-sm font-semibold transition-colors disabled:opacity-60 ${styles} ${className}`}
+      className={`inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-lg px-3.5 text-sm font-medium whitespace-nowrap transition-colors disabled:opacity-60 ${styles} ${className}`}
     >
       <CopyIcon />
       <span>{state === 'copied' ? 'Copied' : state === 'failed' ? 'Select and copy' : label}</span>

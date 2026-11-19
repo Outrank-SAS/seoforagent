@@ -14,7 +14,7 @@ export interface AgentSetup {
 }
 
 export const claudeCodeCommand = (key: string): string =>
-  `claude mcp add --transport http seoforagent ${MCP_URL} --header "Authorization: Bearer ${key}"`;
+  [`claude mcp add --transport http seoforagent \\`, `  ${MCP_URL} \\`, `  --header "Authorization: Bearer ${key}"`].join('\n');
 
 export const codexConfig = (key: string): string =>
   ['[mcp_servers.seoforagent]', `url = "${MCP_URL}"`, `http_headers = { Authorization = "Bearer ${key}" }`].join('\n');
@@ -28,26 +28,26 @@ export const AGENTS: AgentSetup[] = [
   {
     id: 'claude-code',
     label: 'Claude Code',
-    intro: 'Run this in your terminal, then start Claude Code and paste the setup prompt.',
+    intro: 'Run this in your terminal. It adds SEOforAgent to every Claude Code session.',
     language: 'shell',
     snippet: claudeCodeCommand,
-    steps: ['Run the command above.', 'Open Claude Code and paste the setup prompt below.'],
+    steps: ['Open Claude Code and paste the setup prompt below.'],
   },
   {
     id: 'codex',
     label: 'Codex',
-    intro: 'Add this to ~/.codex/config.toml, then restart Codex.',
+    intro: 'Add this block to ~/.codex/config.toml, then restart Codex.',
     language: 'toml',
     snippet: codexConfig,
-    steps: ['Paste the block into ~/.codex/config.toml.', 'Restart Codex and paste the setup prompt below.'],
+    steps: ['Paste the setup prompt below in Codex.'],
   },
   {
     id: 'cursor',
     label: 'Cursor',
-    intro: 'Add this to ~/.cursor/mcp.json (or .cursor/mcp.json in a project).',
+    intro: 'Merge this into ~/.cursor/mcp.json, or .cursor/mcp.json for one project.',
     language: 'json',
     snippet: cursorConfig,
-    steps: ['Merge the block into mcp.json.', 'Open Cursor settings, check that seoforagent is on, then paste the setup prompt in chat.'],
+    steps: ['In Cursor settings, under MCP, check that seoforagent is on.', 'Paste the setup prompt below in chat.'],
   },
   {
     id: 'claude-app',
@@ -79,12 +79,11 @@ export const setupPrompt = (key: string = KEY_PLACEHOLDER): string =>
   [
     'Set up SEOforAgent for me.',
     '',
-    `1. Add the MCP server ${MCP_URL} with this API key as a Bearer token: ${key}`,
-    `   If you cannot set headers, use ${pathKeyUrl(key)} instead.`,
-    '   If you support plugins, install the seoforagent plugin instead and give it the key.',
-    '2. Call whoami. If it says the key is not active, show me the link and wait.',
-    '3. Ask me for my website, then run the seo-setup skill if you have it, or create the project with projects_create.',
-    '4. Finish with the three most useful things you can do for my site and what each would cost.',
+    `1. Connect the MCP server ${MCP_URL} with my API key as a Bearer token:`,
+    `   ${key}`,
+    '2. Call whoami. If the key is not active, show me the activation link and wait.',
+    '3. Ask me for my website and create the project.',
+    '4. Suggest the three most useful next steps for my site and what each costs.',
   ].join('\n');
 
 export const SETUP_MD = (): string =>
@@ -101,7 +100,7 @@ export const SETUP_MD = (): string =>
     '',
     `- MCP endpoint (Streamable HTTP): ${MCP_URL} with the header \`Authorization: Bearer ${KEY_PLACEHOLDER}\``,
     `- Apps that cannot set headers (Claude app, ChatGPT): ${pathKeyUrl(KEY_PLACEHOLDER)}`,
-    `- Claude Code: \`${claudeCodeCommand(KEY_PLACEHOLDER)}\``,
+    `- Claude Code: \`claude mcp add --transport http seoforagent ${MCP_URL} --header "Authorization: Bearer ${KEY_PLACEHOLDER}"\``,
     '',
     `Full docs: ${SITE_URL}/docs.md`,
     '',

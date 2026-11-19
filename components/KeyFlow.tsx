@@ -256,18 +256,22 @@ export const KeyFlow = ({ mode, plans, presetsUsd, minUsd, maxUsd }: KeyFlowProp
 
   return (
     <div className="flex flex-col gap-5">
-      <section aria-labelledby="key-card-title" className="flex flex-col gap-5 rounded-2xl border border-line bg-white p-5 shadow-sm sm:p-7">
+      <section
+        id="get-key"
+        aria-labelledby="key-card-title"
+        className="flex scroll-mt-24 flex-col gap-5 rounded-2xl border border-line bg-white p-5 shadow-[0_1px_2px_rgba(13,13,18,0.04),0_12px_32px_-16px_rgba(13,13,18,0.18)] sm:p-7"
+      >
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 id="key-card-title" className="text-xl font-semibold">
+          <h2 id="key-card-title" className="text-lg font-semibold tracking-tight">
             Your API key
           </h2>
           <div aria-live="polite">{pill}</div>
         </div>
 
-        <div className="flex flex-col gap-3 rounded-xl bg-ink p-3 pl-4 sm:flex-row sm:items-center">
+        <div className="flex flex-col gap-3 rounded-xl bg-ink p-2 pl-4 sm:flex-row sm:items-center">
           <code
             data-testid="api-key"
-            className="min-w-0 flex-1 font-mono text-[15px] break-all text-white"
+            className="min-w-0 flex-1 py-2 font-mono text-[14px] tracking-tight break-all text-white/90"
             aria-label={showFullKey ? 'Your API key' : 'Your API key, last characters'}
           >
             {phase.name === 'loading' ? <span className="text-white/60">sfa_live_...</span> : displayedKey}
@@ -282,17 +286,39 @@ export const KeyFlow = ({ mode, plans, presetsUsd, minUsd, maxUsd }: KeyFlowProp
         ) : null}
 
         {phase.name === 'new' ? (
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
-            <button type="button" onClick={() => setPhase({ name: 'choosing' })} className={`${buttonPrimary} min-h-14 px-9 text-lg`}>
-              Activate
-              <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-8">
+            <button
+              type="button"
+              onClick={() => setPhase({ name: 'choosing' })}
+              className={`${buttonPrimary} group min-h-13 w-full px-7 text-base shadow-[0_1px_0_rgba(255,255,255,0.25)_inset,0_6px_16px_-6px_rgba(194,65,12,0.55)] sm:w-auto`}
+            >
+              Activate this key
+              <svg
+                aria-hidden="true"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="transition-transform group-hover:translate-x-0.5"
+              >
                 <path d="M5 12h14" />
                 <path d="M13 6l6 6-6 6" />
               </svg>
             </button>
-            <p className="text-[15px] text-muted">
-              From ${priceFrom} a month on Stripe, or buy credit once. This key works as soon as you pay. No sign-up form.
-            </p>
+            <ul className="grid gap-1.5 text-sm text-muted">
+              {[`From $${priceFrom} a month, or credit once`, 'Works the second Stripe confirms', 'No sign-up form, no trial to cancel'].map((item) => (
+                <li key={item} className="flex items-center gap-2">
+                  <svg aria-hidden="true" viewBox="0 0 16 16" className="h-4 w-4 shrink-0 text-accent" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3.5 8.5l3 3 6-7" />
+                  </svg>
+                  {item}
+                </li>
+              ))}
+            </ul>
           </div>
         ) : null}
 
@@ -425,10 +451,11 @@ export const KeyFlow = ({ mode, plans, presetsUsd, minUsd, maxUsd }: KeyFlowProp
         ) : null}
 
         {phase.name === 'new' ? (
-          <p className="text-sm text-muted">
-            Outrank customer? It is included.{' '}
-            <Link href="/app" className="font-medium text-ink underline">
+          <p className="-mx-5 -mb-5 flex flex-wrap items-center justify-between gap-2 rounded-b-2xl border-t border-line bg-surface/60 px-5 py-3.5 text-sm text-muted sm:-mx-7 sm:-mb-7 sm:px-7">
+            <span>Already on Outrank? SEOforAgent is included with your plan.</span>
+            <Link href="/app" className="inline-flex min-h-9 items-center gap-1 font-medium text-ink hover:text-accent">
               Sign in
+              <span aria-hidden="true">→</span>
             </Link>
           </p>
         ) : null}

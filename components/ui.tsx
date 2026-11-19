@@ -3,22 +3,22 @@ import { CopyButton } from './CopyButton';
 export type PillTone = 'warn' | 'ok' | 'neutral' | 'danger';
 
 const PILL_TONES: Record<PillTone, string> = {
-  warn: 'bg-warn-soft text-warn',
-  ok: 'bg-ok-soft text-ok',
-  neutral: 'bg-surface text-muted',
-  danger: 'bg-danger-soft text-danger',
+  warn: 'text-warn',
+  ok: 'text-ok',
+  neutral: 'text-muted',
+  danger: 'text-danger',
 };
 
 const PILL_DOTS: Record<PillTone, string> = {
-  warn: 'border-2 border-current bg-transparent',
-  ok: 'bg-current',
-  neutral: 'bg-current opacity-50',
-  danger: 'bg-current',
+  warn: 'bg-[#e8a33d] ring-4 ring-[#e8a33d]/20',
+  ok: 'bg-[#16a34a] ring-4 ring-[#16a34a]/15',
+  neutral: 'bg-faint/60 ring-4 ring-faint/10',
+  danger: 'bg-danger ring-4 ring-danger/15',
 };
 
 export const Pill = ({ tone, children }: { tone: PillTone; children: React.ReactNode }) => (
-  <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-semibold ${PILL_TONES[tone]}`}>
-    <span aria-hidden="true" className={`inline-block h-2 w-2 rounded-full ${PILL_DOTS[tone]}`} />
+  <span className={`inline-flex items-center gap-2.5 text-sm font-medium ${PILL_TONES[tone]}`}>
+    <span aria-hidden="true" className={`inline-block h-2 w-2 shrink-0 rounded-full ${PILL_DOTS[tone]}`} />
     {children}
   </span>
 );
@@ -31,14 +31,17 @@ export const Spinner = ({ className = '' }: { className?: string }) => (
 );
 
 export const CodeBlock = ({ code, label, dark = false }: { code: string; label?: string; dark?: boolean }) => (
-  <div className={`flex flex-col gap-2 rounded-xl p-3 sm:flex-row sm:items-start ${dark ? 'bg-ink text-white' : 'border border-line bg-white'}`}>
+  <div className={`overflow-hidden rounded-xl ${dark ? 'bg-ink text-white' : 'border border-line bg-white'}`}>
+    <div className={`flex items-center justify-between gap-3 py-1.5 pr-1.5 pl-4 ${dark ? 'border-b border-white/10' : 'border-b border-line'}`}>
+      <span className={`text-xs font-medium ${dark ? 'text-white/50' : 'text-faint'}`}>{label ?? 'Code'}</span>
+      <CopyButton text={code} variant={dark ? 'dark' : 'light'} label="Copy" />
+    </div>
     <pre
       tabIndex={0}
       aria-label={label}
-      className={`min-w-0 flex-1 overflow-x-auto whitespace-pre-wrap break-all px-1 py-1.5 font-mono text-sm leading-relaxed ${dark ? 'text-white' : 'text-ink'}`}
+      className={`overflow-x-auto px-4 py-3.5 font-mono text-[13px] leading-relaxed break-words whitespace-pre-wrap ${dark ? 'text-white/90' : 'text-ink'}`}
     >
       {code}
     </pre>
-    <CopyButton text={code} variant={dark ? 'dark' : 'light'} label={label ? `Copy ${label.toLowerCase()}` : 'Copy'} />
   </div>
 );

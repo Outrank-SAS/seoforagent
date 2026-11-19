@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { GITHUB_URL, OUTRANK_URL, SUPPORT_EMAIL } from '@/lib/config';
+import { GITHUB_PUBLIC, GITHUB_URL, OUTRANK_URL, SUPPORT_EMAIL } from '@/lib/config';
 import { ByOutrank, LogoMark } from './Lockup';
 
 export const SiteFooter = () => (
@@ -11,7 +11,7 @@ export const SiteFooter = () => (
           SEOforAgent
           <ByOutrank />
         </span>
-        <p className="max-w-sm text-sm text-muted">The SEO tool for AI agents. The client is open source under MIT. The service runs on Outrank.</p>
+        <p className="max-w-sm text-sm text-muted">The SEO tool for AI agents. Built and run by Outrank.</p>
       </div>
       <nav aria-label="Footer" className="grid grid-cols-2 gap-x-10 gap-y-1 text-sm sm:grid-cols-3">
         <Link href="/docs" className="inline-flex min-h-11 items-center text-muted hover:text-ink">
@@ -20,16 +20,15 @@ export const SiteFooter = () => (
         <Link href="/pricing" className="inline-flex min-h-11 items-center text-muted hover:text-ink">
           Pricing
         </Link>
-        <a href={GITHUB_URL} className="inline-flex min-h-11 items-center text-muted hover:text-ink">
-          GitHub
-        </a>
-        <a href="https://status.outrank.so" className="inline-flex min-h-11 items-center text-muted hover:text-ink">
-          Status
-        </a>
-        <a href={`${OUTRANK_URL}/terms`} className="inline-flex min-h-11 items-center text-muted hover:text-ink">
+        {GITHUB_PUBLIC ? (
+          <a href={GITHUB_URL} className="inline-flex min-h-11 items-center text-muted hover:text-ink">
+            GitHub
+          </a>
+        ) : null}
+        <a href={`${OUTRANK_URL}/terms-of-use`} className="inline-flex min-h-11 items-center text-muted hover:text-ink">
           Terms
         </a>
-        <a href={`${OUTRANK_URL}/privacy`} className="inline-flex min-h-11 items-center text-muted hover:text-ink">
+        <a href={`${OUTRANK_URL}/privacy-policy`} className="inline-flex min-h-11 items-center text-muted hover:text-ink">
           Privacy
         </a>
         <a href={`mailto:${SUPPORT_EMAIL}`} className="inline-flex min-h-11 items-center text-muted hover:text-ink">

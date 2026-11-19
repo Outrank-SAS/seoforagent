@@ -5,6 +5,20 @@ import { AGENTS, KEY_PLACEHOLDER, setupPrompt, type AgentId } from '@/lib/setup'
 import { CopyButton } from './CopyButton';
 import { CodeBlock } from './ui';
 
+const SNIPPET_LABELS = { shell: 'Terminal', toml: '~/.codex/config.toml', json: '~/.cursor/mcp.json', text: 'Connector URL' } as const;
+
+const Step = ({ number, title, children }: { number: number; title: string; children: React.ReactNode }) => (
+  <li className="flex flex-col gap-3">
+    <div className="flex items-center gap-3">
+      <span aria-hidden="true" className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-line bg-white font-mono text-xs font-semibold text-ink">
+        {number}
+      </span>
+      <h3 className="text-[15px] font-semibold">{title}</h3>
+    </div>
+    <div className="flex min-w-0 flex-col gap-3 sm:pl-10">{children}</div>
+  </li>
+);
+
 export const PromptCard = ({ apiKey, note }: { apiKey: string | null; note?: string }) => {
   const [agent, setAgent] = useState<AgentId>('claude-code');
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
@@ -24,15 +38,21 @@ export const PromptCard = ({ apiKey, note }: { apiKey: string | null; note?: str
   };
 
   return (
-    <section aria-labelledby={`${baseId}-title`} className="flex flex-col gap-5 rounded-2xl border border-line bg-surface p-5 sm:p-7">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 id={`${baseId}-title`} className="text-xl font-semibold">
-          Paste this into your agent
+    <section aria-labelledby={`${baseId}-title`} className="flex flex-col gap-6 rounded-2xl border border-line bg-surface/70 p-5 sm:p-7">
+      <div className="flex flex-col gap-1">
+        <h2 id={`${baseId}-title`} className="text-lg font-semibold tracking-tight">
+          Connect your agent
         </h2>
-        <CopyButton text={prompt} label="Copy prompt" />
+        <p className="text-sm text-muted">
+          {apiKey ? 'Two steps. Your key is already filled in.' : `Two steps. Replace ${KEY_PLACEHOLDER} with a key from your dashboard.`}
+        </p>
       </div>
 
-      <div role="tablist" aria-label="Agent" className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1">
+      <div
+        role="tablist"
+        aria-label="Agent"
+        className="flex gap-1 overflow-x-auto rounded-xl border border-line bg-white p-1 [scrollbar-width:none] sm:self-start [&::-webkit-scrollbar]:hidden"
+      >
         {AGENTS.map((item, index) => {
           const selected = item.id === agent;
           return (
@@ -49,8 +69,8 @@ export const PromptCard = ({ apiKey, note }: { apiKey: string | null; note?: str
               tabIndex={selected ? 0 : -1}
               onClick={() => setAgent(item.id)}
               onKeyDown={(event) => onKeyDown(event, index)}
-              className={`min-h-11 shrink-0 rounded-full px-4 text-sm font-semibold transition-colors ${
-                selected ? 'bg-ink text-white' : 'border border-line bg-white text-ink hover:bg-white/60'
+              className={`min-h-9 shrink-0 rounded-lg px-3.5 text-sm font-medium transition-colors ${
+                selected ? 'bg-ink text-white shadow-sm' : 'text-muted hover:bg-surface hover:text-ink'
               }`}
             >
               {item.label}
@@ -59,29 +79,43 @@ export const PromptCard = ({ apiKey, note }: { apiKey: string | null; note?: str
         })}
       </div>
 
-      <div role="tabpanel" id={`${baseId}-panel`} aria-labelledby={`${baseId}-tab-${current.id}`} className="flex flex-col gap-3">
-        <p className="text-sm text-muted">{current.intro}</p>
-        <CodeBlock code={current.snippet(key)} label={current.language === 'text' ? 'Connector URL' : 'Config'} dark />
-        <ol className="list-decimal space-y-1 pl-5 text-sm text-muted">
-          {current.steps.map((step) => (
-            <li key={step}>{step}</li>
-          ))}
-        </ol>
-      </div>
+      <ol role="tabpanel" id={`${baseId}-panel`} aria-labelledby={`${baseId}-tab-${current.id}`} className="flex flex-col gap-7">
+        <Step number={1} title={current.language === 'text' ? `Add the connector in ${current.label}` : `Connect ${current.label}`}>
+          <p className="text-sm text-muted">{current.intro}</p>
+          <CodeBlock code={current.snippet(key)} label={SNIPPET_LABELS[current.language]} dark />
+          {current.steps.length > 1 ? (
+            <ul className="flex flex-col gap-1 text-sm text-muted">
+              {current.steps.slice(0, -1).map((step) => (
+                <li key={step} className="flex gap-2">
+                  <span aria-hidden="true" className="text-faint">
+                    –
+                  </span>
+                  {step}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </Step>
 
-      <div className="flex flex-col gap-2">
-        <h3 className="text-sm font-semibold">Setup prompt</h3>
-        <pre
-          tabIndex={0}
-          aria-label="Setup prompt"
-          className="overflow-x-auto whitespace-pre-wrap break-words rounded-xl border border-line bg-white p-4 font-mono text-sm leading-relaxed"
-        >
-          {prompt}
-        </pre>
-        <p className="text-sm text-muted">
-          {note ?? (apiKey ? 'The key is already inside, so there is nothing else to configure.' : `Replace ${KEY_PLACEHOLDER} with a key from your dashboard.`)}
-        </p>
-      </div>
+        <Step number={2} title="Paste the setup prompt">
+          <div className="overflow-hidden rounded-xl border border-line bg-white">
+            <div className="flex items-center justify-between gap-3 border-b border-line py-1.5 pr-1.5 pl-4">
+              <span className="text-xs font-medium text-faint">Setup prompt</span>
+              <CopyButton text={prompt} label="Copy prompt" />
+            </div>
+            <pre
+              tabIndex={0}
+              aria-label="Setup prompt"
+              className="overflow-x-auto p-4 font-mono text-[13px] leading-relaxed break-words whitespace-pre-wrap text-ink"
+            >
+              {prompt}
+            </pre>
+          </div>
+          <p className="text-sm text-muted">
+            {note ?? 'Your agent checks the key, asks for your website, and comes back with three things it can do and what each costs.'}
+          </p>
+        </Step>
+      </ol>
     </section>
   );
 };

@@ -35,21 +35,32 @@ const DocsPage = () => (
   <>
     <SiteHeader />
     <div className="mx-auto grid max-w-6xl gap-10 px-4 pt-10 sm:px-6 lg:grid-cols-[220px_1fr]">
-      <aside className="lg:sticky lg:top-6 lg:self-start">
-        <nav aria-label="Docs" className="flex flex-col gap-1 text-sm">
+      <aside className="lg:sticky lg:top-20 lg:self-start">
+        <nav aria-label="Docs" className="flex flex-col gap-0.5 text-sm">
+          <p className="px-3 pb-2 text-xs font-medium text-faint">On this page</p>
           {NAV.map((item) => (
-            <a key={item.id} href={`#${item.id}`} className="inline-flex min-h-11 items-center rounded-lg px-3 text-ink hover:bg-surface lg:min-h-9">
+            <a
+              key={item.id}
+              href={`#${item.id}`}
+              className="inline-flex min-h-11 items-center rounded-lg px-3 text-muted transition-colors hover:bg-surface hover:text-ink lg:min-h-9"
+            >
               {item.label}
             </a>
           ))}
-          <div className="mt-3 flex flex-col gap-2 border-t border-line pt-3">
-            <CopyButton text={docsMarkdown()} label="Copy page as Markdown" />
-            <a href="/docs.md" className="inline-flex min-h-11 items-center px-3 text-muted underline">
-              docs.md
-            </a>
-            <a href="/llms.txt" className="inline-flex min-h-11 items-center px-3 text-muted underline">
-              llms.txt
-            </a>
+          <div className="mt-4 flex flex-col gap-2 border-t border-line pt-4">
+            <p className="px-3 text-xs font-medium text-faint">For agents</p>
+            <CopyButton text={docsMarkdown()} label="Copy as Markdown" className="w-full" />
+            <div className="flex items-center gap-1 px-1 font-mono text-xs">
+              <a href="/docs.md" className="inline-flex min-h-9 items-center rounded-md px-2 text-muted hover:bg-surface hover:text-ink">
+                docs.md
+              </a>
+              <span aria-hidden="true" className="text-line">
+                /
+              </span>
+              <a href="/llms.txt" className="inline-flex min-h-9 items-center rounded-md px-2 text-muted hover:bg-surface hover:text-ink">
+                llms.txt
+              </a>
+            </div>
           </div>
         </nav>
       </aside>
