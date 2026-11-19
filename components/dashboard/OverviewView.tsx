@@ -7,8 +7,10 @@ import { dataOf } from '@/lib/api';
 import { formatUsd } from '@/lib/format';
 import { pickArray, pickBool, pickString, pickUsd } from '@/lib/pick';
 import { setupPrompt } from '@/lib/setup';
+import { SHAREABLE_TOOLS } from '@/lib/shared';
 import { CopyButton } from '../CopyButton';
 import { useApiGet, useDashboard } from './context';
+import { ShareControl, shareUrlOf } from './ShareControl';
 import { UpgradeCard } from './UpgradeCard';
 import { Card, EmptyState, ErrorState, Modal, RowsTable, SkeletonRows, Stat, downloadCsv, relativeTime, shortDate } from './widgets';
 
@@ -54,6 +56,8 @@ const ResultDrawer = ({ row, onClose }: { row: Row | null; onClose: () => void }
   const result = useApiGet(resultId ? `/sfa/results/${encodeURIComponent(resultId)}` : null, { limit: 200 });
   const rows = result.envelope?.ok ? pickArray(dataOf(result.envelope), RESULT_ROW_PATHS) : [];
   const args = row ? (row.args as Row | undefined) : undefined;
+  const shareable = !!resultId && (SHAREABLE_TOOLS as readonly string[]).includes(row ? pickString(row, ['tool']) : '');
+  const sharedUrl = result.envelope?.ok ? shareUrlOf(dataOf(result.envelope)) : '';
   return (
     <Modal open={!!row} title={row ? pickString(row, ['summary', 'what', 'tool'], 'Activity') : 'Activity'} onClose={onClose} side>
       {row ? (
@@ -77,6 +81,7 @@ const ResultDrawer = ({ row, onClose }: { row: Row | null; onClose: () => void }
             </div>
           </dl>
           {resultId ? <CopyButton text={resultId} label="Copy result id" /> : null}
+          {shareable && !result.loading ? <ShareControl key={`${resultId}:${sharedUrl}`} resultId={resultId} initialUrl={sharedUrl} /> : null}
           {args && Object.keys(args).length > 0 ? (
             <div>
               <h3 className="mb-2 text-sm font-semibold">Arguments</h3>
