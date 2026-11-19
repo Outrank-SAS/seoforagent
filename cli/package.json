@@ -1,0 +1,32 @@
+{
+  "name": "seoforagent",
+  "version": "0.1.0",
+  "description": "Set up SEOforAgent, the SEO tool for AI agents: create an API key and connect Claude Code, Codex or Cursor.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "seoforagent": "./bin/seoforagent.mjs"
+  },
+  "files": [
+    "bin",
+    "lib",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "homepage": "https://seoforagent.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Outrank-SAS/seoforagent.git",
+    "directory": "cli"
+  },
+  "keywords": [
+    "seo",
+    "mcp",
+    "ai-agents",
+    "claude",
+    "codex",
+    "cursor"
+  ]
+}
