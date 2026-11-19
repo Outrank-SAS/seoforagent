@@ -10,6 +10,7 @@ import { buttonSecondary } from '@/lib/styles';
 import { Spinner } from '../ui';
 import { BacklinksTab } from './BacklinksTab';
 import { useApiGet, useDashboard } from './context';
+import { TrackingCard } from './TrackingCard';
 import { Card, EmptyState, ErrorState, Notice, SkeletonRows, downloadCsv, relativeTime, shortDate } from './widgets';
 
 type Loose = Record<string, unknown>;
@@ -69,6 +70,8 @@ const OverviewTab = ({ projectId, project }: { projectId: string; project: Loose
         </dl>
         <p className="text-sm text-muted">Your agent edits this with projects_update. Ask it to correct anything that looks wrong.</p>
       </Card>
+
+      <TrackingCard projectId={projectId} />
 
       <Card title="Search Console">
         <p className="text-muted">

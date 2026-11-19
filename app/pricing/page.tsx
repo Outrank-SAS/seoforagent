@@ -32,6 +32,10 @@ const FAQ = [
     a: 'No. Every account has a per-call and a daily spend limit, set in the dashboard. Agents can cap any call with max_cost_usd and price it first with dry_run.',
   },
   {
+    q: 'How does scheduled tracking work?',
+    a: 'On Growth and above, your agent or you pick keywords and AI prompts per project, and we re-check rankings daily or weekly and AI answers weekly. Each run is charged like the same manual call, and the dashboard shows the estimate before you save.',
+  },
+  {
     q: 'Are repeated calls charged again?',
     a: 'The same call from the same account within 24 hours is free, unless the agent asks for fresh data.',
   },
@@ -109,7 +113,7 @@ const PricingPage = async () => {
                     <td className="p-4 font-mono font-semibold whitespace-nowrap">{money(plan.priceUsd)} a month</td>
                     <td className="p-4 font-mono">{money(plan.includedUsd)}</td>
                     <td className="p-4">{plan.projects}</td>
-                    <td className="p-4">{plan.schedules ? 'Coming soon' : 'No'}</td>
+                    <td className="p-4">{plan.schedules ? 'Yes' : 'No'}</td>
                     <td className="p-4">{plan.whiteLabel ? 'Yes' : 'No'}</td>
                   </tr>
                 ))}
