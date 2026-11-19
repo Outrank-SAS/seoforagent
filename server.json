@@ -1,0 +1,34 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "com.seoforagent/seoforagent",
+  "title": "SEOforAgent",
+  "description": "SEO data, AI visibility checks, listicles AI cites and backlinks for agents, priced in dollars",
+  "version": "0.1.0",
+  "websiteUrl": "https://seoforagent.com/docs",
+  "repository": {
+    "url": "https://github.com/Outrank-SAS/seoforagent",
+    "source": "github"
+  },
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://seoforagent.com/mcp",
+      "headers": [
+        {
+          "name": "Authorization",
+          "description": "Bearer followed by your SEOforAgent API key (sfa_live_...). Get one at https://seoforagent.com",
+          "value": "Bearer {api_key}",
+          "isRequired": true,
+          "isSecret": true,
+          "variables": {
+            "api_key": {
+              "description": "SEOforAgent API key, generated on https://seoforagent.com and activated on Stripe",
+              "isRequired": true,
+              "isSecret": true
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

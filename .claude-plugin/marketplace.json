@@ -1,0 +1,11 @@
+{
+  "name": "seoforagent",
+  "owner": { "name": "Outrank", "email": "support@outrank.so" },
+  "plugins": [
+    {
+      "name": "seoforagent",
+      "source": "./plugin",
+      "description": "SEOforAgent MCP server and skills: SEO data, AI visibility, listicle hunt and backlinks, priced in dollars."
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "seoforagent": {
+      "type": "http",
+      "url": "https://seoforagent.com/mcp",
+      "headers": {
+        "Authorization": "Bearer ${SEOFORAGENT_API_KEY}"
+      }
+    }
+  }
+}

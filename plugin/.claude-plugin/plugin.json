@@ -1,0 +1,10 @@
+{
+  "name": "seoforagent",
+  "version": "0.1.0",
+  "description": "The SEO tool for AI agents, by Outrank: keyword and search data, AI visibility checks, listicle hunting and backlinks, priced in dollars.",
+  "author": { "name": "Outrank", "email": "support@outrank.so", "url": "https://www.outrank.so" },
+  "homepage": "https://seoforagent.com",
+  "repository": "https://github.com/Outrank-SAS/seoforagent",
+  "license": "MIT",
+  "keywords": ["seo", "mcp", "keywords", "backlinks", "ai-visibility", "listicles", "search-console"]
+}
