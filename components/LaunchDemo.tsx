@@ -6,6 +6,7 @@ import { Spinner } from './ui';
 
 const STAGE_WIDTH = 1200;
 const STAGE_HEIGHT = 675;
+const MAX_SCALE = 2;
 
 const PROMPT = "Get my site recommended by ChatGPT for 'ai music video generator'";
 const TYPE_START_MS = 1000;
@@ -28,7 +29,7 @@ const subscribeResize = (onChange: () => void) => {
   return () => window.removeEventListener('resize', onChange);
 };
 
-const fitScale = (): number => Math.min(1, window.innerWidth / STAGE_WIDTH, window.innerHeight / STAGE_HEIGHT);
+const fitScale = (): number => Math.min(MAX_SCALE, window.innerWidth / STAGE_WIDTH, window.innerHeight / STAGE_HEIGHT);
 
 const fade = (on: boolean, duration = 'duration-500'): string => `transition-opacity ${duration} ${on ? 'opacity-100' : 'opacity-0'}`;
 
