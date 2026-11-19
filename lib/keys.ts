@@ -67,9 +67,9 @@ export const promotePendingKey = (key: string): void => {
 
 export const signOut = (): void => removeStorage(ACTIVE_KEY_STORAGE);
 
-export const ensurePendingKey = (): { key: string; persisted: boolean } => {
+export const ensurePendingKey = (): { key: string; persisted: boolean; created: boolean } => {
   const existing = getPendingKey();
-  if (isSfaKey(existing)) return { key: existing, persisted: true };
+  if (isSfaKey(existing)) return { key: existing, persisted: true, created: false };
   const key = generateKey();
-  return { key, persisted: writeStorage(PENDING_KEY_STORAGE, key) };
+  return { key, persisted: writeStorage(PENDING_KEY_STORAGE, key), created: true };
 };

@@ -37,12 +37,14 @@ export const CopyButton = ({
   variant = 'light',
   className = '',
   disabled = false,
+  onCopied,
 }: {
   text: string;
   label?: string;
   variant?: 'light' | 'dark';
   className?: string;
   disabled?: boolean;
+  onCopied?: () => void;
 }) => {
   const [state, setState] = useState<'idle' | 'copied' | 'failed'>('idle');
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -52,6 +54,7 @@ export const CopyButton = ({
   const onClick = async () => {
     const ok = await copyText(text);
     setState(ok ? 'copied' : 'failed');
+    if (ok) onCopied?.();
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => setState('idle'), 2000);
   };
