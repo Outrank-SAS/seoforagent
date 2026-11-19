@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { track } from '@/lib/analytics';
 import { api, dataOf, errorMessage } from '@/lib/api';
 import { PENDING_KEY_STORAGE, SUPPORT_EMAIL } from '@/lib/config';
 import {
@@ -24,12 +25,6 @@ import { CopyButton } from './CopyButton';
 import { PlanPicker, creditAmountError } from './PlanPicker';
 import { PromptCard } from './PromptCard';
 import { Pill, Spinner } from './ui';
-
-declare global {
-  interface Window {
-    Rewardful?: { referral?: string };
-  }
-}
 
 const POLL_INTERVAL_MS = 2000;
 const POLL_WINDOW_MS = 60000;
@@ -109,6 +104,7 @@ export const KeyFlow = ({ mode, plans, presetsUsd, minUsd, maxUsd }: KeyFlowProp
           const data = dataOf(envelope);
           const status = pickString(data, ['status']);
           if (status === 'active') {
+            track('sfa_activation_confirmed', { kind: pickString(data, ['kind']) || undefined, plan: pickString(data, ['plan', 'plan.id']) || undefined });
             promotePendingKey(key);
             setActiveKeyState(key);
             setJustActivatedKey(key);
@@ -173,7 +169,12 @@ export const KeyFlow = ({ mode, plans, presetsUsd, minUsd, maxUsd }: KeyFlowProp
         return;
       }
 
-      const pending = fragmentKey ? { key: fragmentKey, persisted: available } : available ? ensurePendingKey() : { key: generateKey(), persisted: false };
+      const pending = fragmentKey
+        ? { key: fragmentKey, persisted: available, created: false }
+        : available
+          ? ensurePendingKey()
+          : { key: generateKey(), persisted: false, created: true };
+      if (pending.created) track('sfa_key_generated');
       setPendingKey(pending.key);
       const startedAt = Number(readStorage(CHECKOUT_STARTED_STORAGE) || 0);
       const recentCheckout = startedAt > 0 && Date.now() - startedAt < CHECKOUT_MEMORY_MS;
@@ -201,6 +202,11 @@ export const KeyFlow = ({ mode, plans, presetsUsd, minUsd, maxUsd }: KeyFlowProp
     const { envelope } = await api('/sfa/activation/checkout', { method: 'POST', body });
     const url = pickString(dataOf(envelope), ['checkout_url']);
     if (envelope.ok && url.startsWith('https://')) {
+      track('sfa_checkout_started', {
+        kind,
+        plan: kind === 'plan' ? plan : undefined,
+        amount_usd: kind === 'plan' ? plans.find((item) => item.id === plan)?.priceUsd : Number(amount),
+      });
       writeStorage(CHECKOUT_STARTED_STORAGE, String(Date.now()));
       window.location.assign(url);
       return;
@@ -213,6 +219,7 @@ export const KeyFlow = ({ mode, plans, presetsUsd, minUsd, maxUsd }: KeyFlowProp
     removeStorage(CHECKOUT_STARTED_STORAGE);
     removeStorage(PENDING_KEY_STORAGE);
     const next = storageBlocked ? { key: generateKey() } : ensurePendingKey();
+    track('sfa_key_generated');
     setPendingKey(next.key);
     setPhase(mode === 'activate' ? { name: 'choosing' } : { name: 'new' });
   };
@@ -225,6 +232,7 @@ export const KeyFlow = ({ mode, plans, presetsUsd, minUsd, maxUsd }: KeyFlowProp
   const priceFrom = plans.length > 0 ? Math.min(...plans.map((item) => item.priceUsd)) : 9;
   const showFullKey = ['new', 'choosing', 'cancelled', 'redirecting', 'redirect_failed', 'confirming', 'confirm_timeout', 'needs_confirmation', 'expired'].includes(phase.name);
   const promptKey = justActivatedKey ?? (showFullKey ? pendingKey : null);
+  const promptExpanded = phase.name === 'active' || phase.name === 'signed_in';
 
   const pill = (() => {
     switch (phase.name) {
@@ -276,7 +284,7 @@ export const KeyFlow = ({ mode, plans, presetsUsd, minUsd, maxUsd }: KeyFlowProp
           >
             {phase.name === 'loading' ? <span className="text-white/60">sfa_live_...</span> : displayedKey}
           </code>
-          {showFullKey && pendingKey ? <CopyButton text={pendingKey} variant="dark" /> : null}
+          {showFullKey && pendingKey ? <CopyButton text={pendingKey} variant="dark" onCopied={() => track('sfa_key_copied')} /> : null}
         </div>
 
         {storageBlocked && showFullKey ? (
@@ -289,7 +297,10 @@ export const KeyFlow = ({ mode, plans, presetsUsd, minUsd, maxUsd }: KeyFlowProp
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-8">
             <button
               type="button"
-              onClick={() => setPhase({ name: 'choosing' })}
+              onClick={() => {
+                track('sfa_activate_clicked');
+                setPhase({ name: 'choosing' });
+              }}
               className={`${buttonPrimary} group min-h-13 w-full px-7 text-base shadow-[0_1px_0_rgba(255,255,255,0.25)_inset,0_6px_16px_-6px_rgba(194,65,12,0.55)] sm:w-auto`}
             >
               Activate this key
@@ -461,7 +472,7 @@ export const KeyFlow = ({ mode, plans, presetsUsd, minUsd, maxUsd }: KeyFlowProp
         ) : null}
       </section>
 
-      {phase.name !== 'loading' ? (
+      {phase.name !== 'loading' && promptExpanded ? (
         <PromptCard
           apiKey={promptKey}
           note={
@@ -470,6 +481,32 @@ export const KeyFlow = ({ mode, plans, presetsUsd, minUsd, maxUsd }: KeyFlowProp
               : undefined
           }
         />
+      ) : null}
+
+      {phase.name !== 'loading' && !promptExpanded ? (
+        <details className="group flex flex-col">
+          <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 rounded-2xl border border-line bg-white px-5 py-3 transition-colors hover:border-ink/25 sm:px-7 [&::-webkit-details-marker]:hidden">
+            <span className="flex flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
+              <span className="font-medium text-ink">How do I connect my agent?</span>
+              <span className="text-sm text-muted">Two steps</span>
+            </span>
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 16 16"
+              className="h-4 w-4 shrink-0 text-faint transition-transform group-open:rotate-180"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M3.5 6l4.5 4.5L12.5 6" />
+            </svg>
+          </summary>
+          <div className="pt-3">
+            <PromptCard apiKey={promptKey} />
+          </div>
+        </details>
       ) : null}
     </div>
   );

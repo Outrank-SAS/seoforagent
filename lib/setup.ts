@@ -1,12 +1,13 @@
-import { MCP_URL, SITE_URL } from './config';
+import { CLI_PUBLISHED, MCP_URL, SITE_URL } from './config';
 
 export const KEY_PLACEHOLDER = '<YOUR_API_KEY>';
 
-export type AgentId = 'claude-code' | 'codex' | 'cursor' | 'claude-app' | 'chatgpt';
+export type AgentId = 'cli' | 'claude-code' | 'codex' | 'cursor' | 'claude-app' | 'chatgpt';
 
 export interface AgentSetup {
   id: AgentId;
   label: string;
+  stepTitle?: string;
   intro: string;
   language: 'shell' | 'toml' | 'json' | 'text';
   snippet: (key: string) => string;
@@ -24,7 +25,21 @@ export const cursorConfig = (key: string): string =>
 
 export const pathKeyUrl = (key: string): string => `${MCP_URL}/${key}`;
 
-export const AGENTS: AgentSetup[] = [
+export const CLI_COMMAND = 'npx seoforagent init';
+
+export const cliCommand = (key: string): string => (key === KEY_PLACEHOLDER ? CLI_COMMAND : `${CLI_COMMAND} --key ${key}`);
+
+const CLI_AGENT: AgentSetup = {
+  id: 'cli',
+  label: 'npx',
+  stepTitle: 'Run the installer',
+  intro: 'Run this in your terminal. It prints your activation link and adds SEOforAgent to Claude Code, or prints the config for Codex and Cursor.',
+  language: 'shell',
+  snippet: cliCommand,
+  steps: ['Open your agent and paste the setup prompt below.'],
+};
+
+const MANUAL_AGENTS: AgentSetup[] = [
   {
     id: 'claude-code',
     label: 'Claude Code',
@@ -75,6 +90,10 @@ export const AGENTS: AgentSetup[] = [
   },
 ];
 
+export const AGENTS: AgentSetup[] = CLI_PUBLISHED ? [CLI_AGENT, ...MANUAL_AGENTS] : MANUAL_AGENTS;
+
+export const agentById = (id: AgentId): AgentSetup | undefined => [CLI_AGENT, ...MANUAL_AGENTS].find((agent) => agent.id === id);
+
 export const setupPrompt = (key: string = KEY_PLACEHOLDER): string =>
   [
     'Set up SEOforAgent for me.',
@@ -101,6 +120,7 @@ export const SETUP_MD = (): string =>
     `- MCP endpoint (Streamable HTTP): ${MCP_URL} with the header \`Authorization: Bearer ${KEY_PLACEHOLDER}\``,
     `- Apps that cannot set headers (Claude app, ChatGPT): ${pathKeyUrl(KEY_PLACEHOLDER)}`,
     `- Claude Code: \`claude mcp add --transport http seoforagent ${MCP_URL} --header "Authorization: Bearer ${KEY_PLACEHOLDER}"\``,
+    ...(CLI_PUBLISHED ? [`- Or run \`${CLI_COMMAND}\`: it creates a key, prints the activation link and connects Claude Code.`] : []),
     '',
     `Full docs: ${SITE_URL}/docs.md`,
     '',

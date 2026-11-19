@@ -1,6 +1,7 @@
 'use client';
 
 import { useId, useRef, useState } from 'react';
+import { track } from '@/lib/analytics';
 import { AGENTS, KEY_PLACEHOLDER, setupPrompt, type AgentId } from '@/lib/setup';
 import { CopyButton } from './CopyButton';
 import { CodeBlock } from './ui';
@@ -20,7 +21,7 @@ const Step = ({ number, title, children }: { number: number; title: string; chil
 );
 
 export const PromptCard = ({ apiKey, note }: { apiKey: string | null; note?: string }) => {
-  const [agent, setAgent] = useState<AgentId>('claude-code');
+  const [agent, setAgent] = useState<AgentId>(AGENTS[0].id);
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const baseId = useId();
   const key = apiKey || KEY_PLACEHOLDER;
@@ -80,7 +81,7 @@ export const PromptCard = ({ apiKey, note }: { apiKey: string | null; note?: str
       </div>
 
       <ol role="tabpanel" id={`${baseId}-panel`} aria-labelledby={`${baseId}-tab-${current.id}`} className="flex flex-col gap-7">
-        <Step number={1} title={current.language === 'text' ? `Add the connector in ${current.label}` : `Connect ${current.label}`}>
+        <Step number={1} title={current.stepTitle ?? (current.language === 'text' ? `Add the connector in ${current.label}` : `Connect ${current.label}`)}>
           <p className="text-sm text-muted">{current.intro}</p>
           <CodeBlock code={current.snippet(key)} label={SNIPPET_LABELS[current.language]} dark />
           {current.steps.length > 1 ? (
@@ -101,7 +102,7 @@ export const PromptCard = ({ apiKey, note }: { apiKey: string | null; note?: str
           <div className="overflow-hidden rounded-xl border border-line bg-white">
             <div className="flex items-center justify-between gap-3 border-b border-line py-1.5 pr-1.5 pl-4">
               <span className="text-xs font-medium text-faint">Setup prompt</span>
-              <CopyButton text={prompt} label="Copy prompt" />
+              <CopyButton text={prompt} label="Copy prompt" onCopied={() => track('sfa_prompt_copied', { agent })} />
             </div>
             <pre
               tabIndex={0}

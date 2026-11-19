@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { DomainDemo } from '@/components/DomainDemo';
 import { KeyFlow } from '@/components/KeyFlow';
+import { SessionDemo } from '@/components/SessionDemo';
 import { SiteFooter } from '@/components/SiteFooter';
 import { SiteHeader } from '@/components/SiteHeader';
 import { GITHUB_PUBLIC, GITHUB_URL, OUTRANK_URL } from '@/lib/config';
-import { fetchPricing, linkPriceUsd } from '@/lib/pricing';
+import { fetchPricing, linkPriceUsd, type Pricing } from '@/lib/pricing';
 
 export const revalidate = 300;
 
@@ -16,27 +18,6 @@ export const metadata: Metadata = {
 };
 
 const AGENT_NAMES = ['Claude', 'ChatGPT', 'Codex', 'Cursor'];
-
-const SESSION = [
-  {
-    tool: 'ai_visibility_check',
-    args: '1 prompt, 4 assistants',
-    cost: '$0.20',
-    result: 'Mentioned in 0 of 4 answers. Most cited: freebeat.ai, cybernews.com, stork.ai',
-  },
-  {
-    tool: 'listicles_find',
-    args: '"best ai music video generator"',
-    cost: '$0.50',
-    result: '78 lists rank on Google or are cited by AI. 3 are worth paying to be on.',
-  },
-  {
-    tool: 'backlinks_suggest',
-    args: 'vs invideo.io, pictory.ai',
-    cost: '$0.28',
-    result: '25 sites link to both and not to you. Outrank can place DR 40+ links from $128.',
-  },
-];
 
 const OUTCOMES = [
   {
@@ -104,9 +85,57 @@ const SectionHeading = ({ id, title, subtitle }: { id: string; title: string; su
   </div>
 );
 
+interface FaqItem {
+  q: string;
+  a: string;
+}
+
+const dollars = (value: number): string => `$${value.toLocaleString('en-US')}`;
+
+const listOf = (values: string[]): string => (values.length > 1 ? `${values.slice(0, -1).join(', ')} or ${values[values.length - 1]}` : values.join(''));
+
+const buildFaq = (pricing: Pricing): FaqItem[] => {
+  const { plans, credit, backlinks } = pricing;
+  const linkExample = Math.round(50 * backlinks.creditsPerDr * backlinks.creditUsd * 100) / 100;
+  return [
+    {
+      q: 'What does it cost?',
+      a: `Plans are ${listOf(plans.map((plan) => dollars(plan.priceUsd)))} a month and include ${listOf(plans.map((plan) => dollars(plan.includedUsd)))} of usage. Data calls cost the provider price plus 28%, and every call reports what it cost in dollars.`,
+    },
+    {
+      q: 'Do I need a subscription?',
+      a: `No. You can buy credit once, from ${dollars(credit.minUsd)} to ${dollars(credit.maxUsd)}, and it does not reset.`,
+    },
+    {
+      q: 'Which agents work?',
+      a: 'Claude Code, Codex, Cursor, the Claude app and ChatGPT, and any other client that speaks MCP over HTTP. There is a REST API for everything else.',
+    },
+    {
+      q: 'Where does the data come from?',
+      a: 'Keyword, search and backlink data comes from DataForSEO, the provider behind many SEO tools. AI visibility checks query the real assistants: ChatGPT, Perplexity, Gemini and Claude.',
+    },
+    {
+      q: 'How does backlink buying work?',
+      a: `A backlink credit is $${backlinks.creditUsd.toFixed(2)} and a link costs its DR x ${backlinks.creditsPerDr} credits, so a DR 50 link is ${dollars(linkExample)}. Links are placed through the Outrank marketplace within the budget you set, and a lost link is refunded in credits.`,
+    },
+    {
+      q: 'Is my key safe?',
+      a: 'The key is created in your browser and does nothing until you activate it. You can revoke it in the dashboard at any time, and spend limits cap what an agent can use.',
+    },
+  ];
+};
+
+const faqJsonLd = (items: FaqItem[]): string =>
+  JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: items.map((item) => ({ '@type': 'Question', name: item.q, acceptedAnswer: { '@type': 'Answer', text: item.a } })),
+  }).replace(/</g, '\\u003c');
+
 const HomePage = async () => {
   const pricing = await fetchPricing();
   const plans = pricing.plans;
+  const faq = buildFaq(pricing);
   return (
     <>
       <SiteHeader />
@@ -140,8 +169,9 @@ const HomePage = async () => {
             </p>
           </section>
 
-          <div className="mx-auto max-w-[860px] px-4 pt-12 sm:px-6">
+          <div className="mx-auto flex max-w-[860px] flex-col gap-5 px-4 pt-12 sm:px-6">
             <KeyFlow mode="home" plans={plans} presetsUsd={pricing.credit.presetsUsd} minUsd={pricing.credit.minUsd} maxUsd={pricing.credit.maxUsd} />
+            <DomainDemo />
           </div>
         </div>
 
@@ -151,45 +181,7 @@ const HomePage = async () => {
             title="Ask in plain words. Your agent does the rest."
             subtitle="Every call says what it found and what it cost, so your agent can plan and you never get a surprise bill."
           />
-          <figure className="mt-8 overflow-hidden rounded-2xl border border-ink/90 bg-ink text-white shadow-[0_24px_48px_-24px_rgba(13,13,18,0.45)]">
-            <div className="flex items-center gap-2 border-b border-white/10 px-5 py-3">
-              <span aria-hidden="true" className="flex gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
-                <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
-                <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
-              </span>
-              <span className="ml-2 font-mono text-xs text-white/50">claude · seoforagent</span>
-            </div>
-            <div className="flex flex-col gap-6 p-5 font-mono text-[13px] leading-relaxed sm:p-7">
-              <p className="text-white">
-                <span aria-hidden="true" className="mr-2 text-accent">
-                  ❯
-                </span>
-                How do I get recommended by ChatGPT for &quot;ai music video generator&quot;?
-              </p>
-              <ol className="flex flex-col gap-5">
-                {SESSION.map((step) => (
-                  <li key={step.tool} className="flex flex-col gap-1">
-                    <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-                      <span>
-                        <span aria-hidden="true" className="mr-2 text-[#4ade80]">
-                          ●
-                        </span>
-                        <span className="text-white">{step.tool}</span>
-                        <span className="text-white/40"> {step.args}</span>
-                      </span>
-                      <span className="text-white/60">{step.cost}</span>
-                    </div>
-                    <p className="pl-5 text-white/60">{step.result}</p>
-                  </li>
-                ))}
-              </ol>
-              <p className="border-t border-white/10 pt-5 text-white/80">
-                Here is the plan: get onto stork.ai and cybernews.com first, pitch drafts are ready. Spent $0.98, $8.02 of usage left this month.
-              </p>
-            </div>
-            <figcaption className="sr-only">Example session in Claude with SEOforAgent connected</figcaption>
-          </figure>
+          <SessionDemo />
           <p className="mt-3 text-sm text-faint">Example session. Prices are the real per-call prices.</p>
         </section>
 
@@ -272,7 +264,12 @@ const HomePage = async () => {
               </tbody>
             </table>
           </div>
-          <p className="mt-3 text-sm text-faint">Public prices and features as of 19 Nov 2026. Ahrefs Lite and Semrush Pro, billed monthly.</p>
+          <p className="mt-3 text-sm text-faint">
+            Public prices and features as of 19 Nov 2026. Ahrefs Lite and Semrush Pro, billed monthly.{' '}
+            <Link href="/vs/openseo" className="text-muted underline underline-offset-2 hover:text-ink">
+              SEOforAgent vs OpenSEO in detail
+            </Link>
+          </p>
         </section>
 
         <section aria-labelledby="plans" className="mx-auto max-w-6xl px-4 pt-28 sm:px-6">
@@ -304,6 +301,37 @@ const HomePage = async () => {
           </ul>
         </section>
 
+        <section aria-labelledby="faq" className="mx-auto max-w-6xl px-4 pt-28 sm:px-6">
+          <div className="grid gap-8 lg:grid-cols-[1fr_2fr]">
+            <SectionHeading id="faq" title="Questions" subtitle="Short answers. The docs have the long ones." />
+            <div>
+              <div className="divide-y divide-line border-y border-line">
+                {faq.map((item) => (
+                  <details key={item.q} className="group py-1.5">
+                    <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-4 font-medium [&::-webkit-details-marker]:hidden">
+                      {item.q}
+                      <span aria-hidden="true" className="font-mono text-lg text-faint transition-transform group-open:rotate-45">
+                        +
+                      </span>
+                    </summary>
+                    <p className="max-w-2xl pb-4 text-pretty text-muted">{item.a}</p>
+                  </details>
+                ))}
+              </div>
+              {GITHUB_PUBLIC ? (
+                <p className="mt-5 text-sm text-muted">
+                  The SEOforAgent client is open source under MIT on{' '}
+                  <a href={GITHUB_URL} className="font-medium text-ink underline underline-offset-2">
+                    GitHub
+                  </a>
+                  . The service runs on Outrank.
+                </p>
+              ) : null}
+            </div>
+          </div>
+          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: faqJsonLd(faq) }} />
+        </section>
+
         <section className="mx-auto max-w-6xl px-4 pt-28 sm:px-6">
           <div className="flex flex-col gap-6 rounded-3xl bg-outrank-soft p-7 sm:flex-row sm:items-center sm:justify-between sm:p-10">
             <div className="flex max-w-2xl flex-col gap-2">
@@ -317,16 +345,6 @@ const HomePage = async () => {
               <h2 className="text-2xl font-semibold tracking-tight">Rather have it done for you?</h2>
               <p className="text-muted">
                 Outrank writes and publishes an article every day and builds backlinks automatically, for $99 a month. SEOforAgent is included.
-                {GITHUB_PUBLIC ? (
-                  <>
-                    {' '}
-                    The SEOforAgent client is open source on{' '}
-                    <a href={GITHUB_URL} className="font-medium text-ink underline">
-                      GitHub
-                    </a>
-                    .
-                  </>
-                ) : null}
               </p>
             </div>
             <a

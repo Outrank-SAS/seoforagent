@@ -45,3 +45,14 @@ export const CodeBlock = ({ code, label, dark = false }: { code: string; label?:
     </pre>
   </div>
 );
+
+export const TerminalBar = ({ title }: { title: string }) => (
+  <div className="flex items-center gap-2 border-b border-white/10 px-5 py-3">
+    <span aria-hidden="true" className="flex gap-1.5">
+      <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
+      <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
+      <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
+    </span>
+    <span className="ml-2 truncate font-mono text-xs text-white/50">{title}</span>
+  </div>
+);
