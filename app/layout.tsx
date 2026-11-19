@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     'Give Claude, ChatGPT, Codex or Cursor real SEO data, AI visibility checks, the listicles AI assistants cite and backlinks through Outrank. Priced in dollars, from $9 a month.',
   applicationName: 'SEOforAgent',
   openGraph: { type: 'website', siteName: 'SEOforAgent', url: SITE_URL },
-  twitter: { card: 'summary' },
+  twitter: { card: 'summary_large_image' },
   alternates: { types: { 'text/plain': '/llms.txt', 'text/markdown': '/docs.md' } },
 };
 
