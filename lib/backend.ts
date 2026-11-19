@@ -23,11 +23,23 @@ export const backendUrl = (path: string, query?: URLSearchParams): string => {
   return `${OUTRANK_API_BASE}${cleanPath}${search}`;
 };
 
+export const CLIENT_IP_HEADER = 'x-sfa-client-ip';
+export const PROXY_SECRET_HEADER = 'x-sfa-proxy-secret';
+
+export const setVisitorHeaders = (headers: Headers, ip: string | undefined): void => {
+  headers.delete(CLIENT_IP_HEADER);
+  headers.delete(PROXY_SECRET_HEADER);
+  if (ip) headers.set(CLIENT_IP_HEADER, ip);
+  const secret = process.env.SFA_PROXY_SECRET;
+  if (secret) headers.set(PROXY_SECRET_HEADER, secret);
+};
+
 export const callBackend = async (request: BackendRequest): Promise<BackendResponse> => {
   const headers = new Headers({ Accept: 'application/json', 'User-Agent': 'seoforagent-web' });
   if (request.key) headers.set('Authorization', `Bearer ${request.key}`);
   if (request.idempotencyKey) headers.set('Idempotency-Key', request.idempotencyKey);
   if (request.forwardedFor) headers.set('X-Forwarded-For', request.forwardedFor);
+  setVisitorHeaders(headers, request.forwardedFor);
   const hasBody = request.body !== undefined && request.method !== 'GET' && request.method !== 'DELETE';
   if (hasBody) headers.set('Content-Type', 'application/json');
   const response = await fetch(backendUrl(request.path, request.query), {

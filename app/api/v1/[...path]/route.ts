@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { backendUrl, clientIp } from '@/lib/backend';
+import { backendUrl, clientIp, setVisitorHeaders } from '@/lib/backend';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -19,6 +19,7 @@ const proxy = async (request: NextRequest, context: RouteContext): Promise<Respo
   }
   const ip = clientIp(request.headers);
   if (ip) headers.set('X-Forwarded-For', ip);
+  setVisitorHeaders(headers, ip);
 
   const hasBody = request.method !== 'GET' && request.method !== 'HEAD';
   let upstream: Response;
@@ -56,5 +57,6 @@ const proxy = async (request: NextRequest, context: RouteContext): Promise<Respo
 
 export const GET = proxy;
 export const POST = proxy;
+export const PUT = proxy;
 export const PATCH = proxy;
 export const DELETE = proxy;

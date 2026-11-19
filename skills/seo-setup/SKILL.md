@@ -21,7 +21,7 @@ Use `dry_run: true` on any paid call you are unsure about. Keep a running total 
 6. If Search Console is connected, call `gsc_performance` with `dimensions: ["query"]` and `months: 3` (free) and note queries in positions 5 to 20.
 7. Finish with exactly three next steps, each with what it does and what it would cost, for example:
    - Keyword research on 3 seeds with `keywords_research`: up to $0.18.
-   - How ChatGPT, Perplexity, Gemini and Claude answer 3 buying questions with `ai_visibility_check`: $0.60.
+   - How ChatGPT, Perplexity, Gemini and Claude answer 3 buying questions with `ai_visibility_check`: $0.96.
    - A listicle hunt on 2 queries with `listicles_find`: $1.00.
 
 ## Rules

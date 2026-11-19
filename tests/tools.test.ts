@@ -10,6 +10,7 @@ const EXPECTED_TOOLS = [
   'pricing_get',
   'account_link',
   'results_get',
+  'results_share',
   'projects_list',
   'projects_create',
   'projects_get',
@@ -26,6 +27,8 @@ const EXPECTED_TOOLS = [
   'backlinks_gap',
   'rank_check',
   'rank_history',
+  'tracking_get',
+  'tracking_set',
   'ai_visibility_check',
   'listicles_find',
   'listicles_list',
@@ -45,6 +48,7 @@ const EXPECTED_ROUTES: Record<string, { method: string; path: string }> = {
   pricing_get: { method: 'GET', path: '/sfa/pricing' },
   account_link: { method: 'POST', path: '/sfa/account/link' },
   results_get: { method: 'GET', path: '/sfa/results/res_1' },
+  results_share: { method: 'POST', path: '/sfa/results/res_1/share' },
   projects_list: { method: 'GET', path: '/sfa/projects' },
   projects_create: { method: 'POST', path: '/sfa/projects' },
   projects_get: { method: 'GET', path: '/sfa/projects/prj_1' },
@@ -61,6 +65,8 @@ const EXPECTED_ROUTES: Record<string, { method: string; path: string }> = {
   backlinks_gap: { method: 'POST', path: '/sfa/backlinks/gap' },
   rank_check: { method: 'POST', path: '/sfa/projects/prj_1/rank-check' },
   rank_history: { method: 'GET', path: '/sfa/projects/prj_1/rank-history' },
+  tracking_get: { method: 'GET', path: '/sfa/projects/prj_1/tracking' },
+  tracking_set: { method: 'PUT', path: '/sfa/projects/prj_1/tracking' },
   ai_visibility_check: { method: 'POST', path: '/sfa/ai/check' },
   listicles_find: { method: 'POST', path: '/sfa/projects/prj_1/listicles/find' },
   listicles_list: { method: 'GET', path: '/sfa/projects/prj_1/listicles' },
@@ -134,6 +140,36 @@ describe('tool registry', () => {
     const schema = z.object(tool.input);
     expect(schema.safeParse({ project_id: 'prj_1', quote_id: 'q_42' }).success).toBe(false);
     expect(schema.safeParse({ project_id: 'prj_1', confirm_usd: 160 }).success).toBe(false);
+  });
+
+  it('shares with POST and unshares with DELETE, without sending the switch', () => {
+    const tool = TOOL_BY_NAME.get('results_share')!;
+    const share = buildRequest(tool, { result_id: 'res_1' });
+    expect(share.method).toBe('POST');
+    expect(share.body).toEqual({});
+    expect(buildRequest(tool, { result_id: 'res_1', shared: true }).method).toBe('POST');
+    const unshare = buildRequest(tool, { result_id: 'res_1', shared: false });
+    expect(unshare.method).toBe('DELETE');
+    expect(unshare.path).toBe('/sfa/results/res_1/share');
+    expect(unshare.body).toBeUndefined();
+    expect(unshare.query.toString()).toBe('');
+    expect(tool.kind).toBe('write');
+  });
+
+  it('sends the tracking blocks as a PUT body and validates them', () => {
+    const tool = TOOL_BY_NAME.get('tracking_set')!;
+    const rank = { enabled: true, cadence: 'weekly', keywords: ['ai video editor'] };
+    const ai = { enabled: true, prompts: ['best ai video editor'], engines: ['chatgpt', 'claude'] };
+    const request = buildRequest(tool, { project_id: 'prj_1', rank, ai });
+    expect(request.method).toBe('PUT');
+    expect(request.body).toEqual({ rank, ai });
+    const schema = z.object(tool.input);
+    expect(schema.safeParse({ project_id: 'prj_1', rank }).success).toBe(true);
+    expect(schema.safeParse({ project_id: 'prj_1', rank: { ...rank, cadence: 'hourly' } }).success).toBe(false);
+    expect(schema.safeParse({ project_id: 'prj_1', ai: { ...ai, engines: ['bing'] } }).success).toBe(false);
+    expect(TOOL_BY_NAME.get('tracking_get')!.kind).toBe('read');
+    expect(tool.kind).toBe('write');
+    expect(tool.price).toMatch(/^Free/);
   });
 
   it('annotates money tools as destructive and read tools as read-only', () => {

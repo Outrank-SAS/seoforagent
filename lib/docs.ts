@@ -61,7 +61,8 @@ export const toolsByArea = (): [ToolArea, ToolDefinition[]][] => {
 
 export const routeOf = (tool: ToolDefinition): string => {
   const sample: Record<string, string> = { project_id: ':project_id', page_id: ':page_id', result_id: ':result_id' };
-  return `${tool.method} ${tool.path(sample).replace(/%3A/g, ':')}`;
+  const off = tool.offMethod ? ` (${tool.offMethod.method} when ${tool.offMethod.arg} is false)` : '';
+  return `${tool.method} ${tool.path(sample).replace(/%3A/g, ':')}${off}`;
 };
 
 export const BILLING_POINTS = [
@@ -70,6 +71,7 @@ export const BILLING_POINTS = [
   'Every paid response carries cost.charged_usd, cost.included_left_usd and cost.credit_left_usd, plus a result_id you can re-read for free for 30 days with results_get.',
   'Every paid tool accepts dry_run (price only, free), max_cost_usd (refuse above this amount) and fresh (skip the free 24-hour repeat).',
   'Per-call and daily spend limits are set by the human in the dashboard. A call over a limit returns OVER_SPEND_LIMIT and is not charged.',
+  'Scheduled tracking (Growth and above) re-runs rank checks daily or weekly and AI visibility checks weekly. Each run is charged like the same manual call; tracking_get shows the estimate per run.',
   `Backlinks: credit converts to Outrank backlink credits at $${BACKLINK_CREDIT_USD.toFixed(2)} each. A link costs DR × ${BACKLINK_CREDITS_PER_DR} credits, so a DR 50 link is 200 credits, $${linkPriceUsd(50)}. Buying is two calls: backlinks_quote, then backlinks_allocate with the quote_id and the exact confirm_usd the human approved.`,
 ];
 
@@ -89,6 +91,8 @@ export const ERROR_CODES: [string, string][] = [
 
 export const ACCOUNT_ROUTES: [string, string][] = [
   ['GET /sfa/pricing', 'Plans, credit options, tool prices and the backlink rate. No key needed.'],
+  ['POST /sfa/demo/domain', 'Body: domain. A free domain overview, 3 a day per visitor. No key needed.'],
+  ['GET /sfa/shared/:token', 'The public copy of a result shared with results_share. No key needed.'],
   ['POST /sfa/activation/checkout', 'Body: key, kind (plan or credit), plan or amount_usd, return_origin, referral. Returns checkout_url. No key needed.'],
   ['GET /sfa/activation/status', 'Bearer: the pending key. Returns status: pending_payment, pending_owner_confirmation, active, expired or unknown.'],
   ['POST /sfa/auth/email-link', 'Body: email, return_origin. Always returns sent: true.'],

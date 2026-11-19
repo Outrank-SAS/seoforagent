@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
 export type ToolKind = 'read' | 'paid' | 'write' | 'money';
-export type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE';
-export type ToolArea = 'account' | 'projects' | 'search-console' | 'keywords' | 'domains' | 'rankings' | 'ai' | 'listicles' | 'backlinks';
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+export type ToolArea = 'account' | 'projects' | 'search-console' | 'keywords' | 'domains' | 'rankings' | 'tracking' | 'ai' | 'listicles' | 'backlinks';
 export type ToolArgs = Record<string, unknown>;
 
 export interface ToolDefinition {
@@ -13,6 +13,7 @@ export interface ToolDefinition {
   description: string;
   price: string;
   method: HttpMethod;
+  offMethod?: { arg: string; method: HttpMethod };
   input: z.ZodRawShape;
   pathArgs: string[];
   path: (args: ToolArgs) => string;
@@ -35,6 +36,7 @@ export const AREA_LABELS: Record<ToolArea, string> = {
   keywords: 'Keywords and search results',
   domains: 'Domains',
   rankings: 'Rank tracking',
+  tracking: 'Scheduled tracking',
   ai: 'AI visibility',
   listicles: 'Listicle hunt',
   backlinks: 'Backlinks',
@@ -160,6 +162,23 @@ export const TOOLS: ToolDefinition[] = [
     },
     pathArgs: ['result_id'],
     path: (args) => `/sfa/results/${segment(args.result_id)}`,
+  },
+  {
+    name: 'results_share',
+    title: 'Share a result',
+    area: 'account',
+    kind: 'write',
+    description:
+      'Makes a stored result public at a share URL that anyone can open without a key, or takes that URL down again with shared: false. Use it when the human wants to show an AI visibility check or a listicle hunt to someone; use results_get to read a result yourself. Free. Only results of ai_visibility_check and listicles_find can be shared, and the public page shows the brand, prompts and domains in the result: ask the human before sharing.',
+    price: 'Free',
+    method: 'POST',
+    offMethod: { arg: 'shared', method: 'DELETE' },
+    input: {
+      result_id: z.string().min(1).describe('The result_id of an ai_visibility_check or listicles_find response.'),
+      shared: z.boolean().optional().describe('true (default) creates or returns the share URL. false removes it.'),
+    },
+    pathArgs: ['result_id', 'shared'],
+    path: (args) => `/sfa/results/${segment(args.result_id)}/share`,
   },
   {
     name: 'projects_list',
@@ -476,13 +495,57 @@ export const TOOLS: ToolDefinition[] = [
     path: (args) => `${project(args)}/rank-history`,
   },
   {
+    name: 'tracking_get',
+    title: 'Scheduled tracking state',
+    area: 'tracking',
+    kind: 'read',
+    description:
+      'Returns the scheduled tracking of a project: the rank keywords and their cadence, the AI visibility prompts and assistants, the last and next run, the estimated cost of each run and whether the plan allows scheduling. Call it before tracking_set; use rank_history to read the positions the runs recorded. Free. plan_allows false means the plan has no scheduled tracking: show the upgrade link instead of trying to set it.',
+    price: 'Free',
+    method: 'GET',
+    input: { project_id: projectId },
+    pathArgs: ['project_id'],
+    path: (args) => `${project(args)}/tracking`,
+  },
+  {
+    name: 'tracking_set',
+    title: 'Set scheduled tracking',
+    area: 'tracking',
+    kind: 'write',
+    description:
+      'Turns scheduled rank checks (daily or weekly) and weekly AI visibility checks on or off for a project and sets their keywords, prompts and assistants. Use it after the human agreed to the cost per run from tracking_get; use rank_check or ai_visibility_check for a single run now. Free to call, but each scheduled run is charged like the same manual call. Each block you send replaces the stored one, so send its full lists, and PLAN_REQUIRED means the plan has no scheduling: show the upgrade link from the error.',
+    price: 'Free (each scheduled run is charged like the same manual call)',
+    method: 'PUT',
+    input: {
+      project_id: projectId,
+      rank: z
+        .object({
+          enabled: z.boolean().describe('Turn scheduled rank checks on or off.'),
+          cadence: z.enum(['daily', 'weekly']).describe('How often to check.'),
+          keywords: z.array(z.string().min(1)).describe('The full list of keywords to track. Replaces the stored list.'),
+        })
+        .optional()
+        .describe('Scheduled rank checks. Omit to leave them unchanged.'),
+      ai: z
+        .object({
+          enabled: z.boolean().describe('Turn weekly AI visibility checks on or off.'),
+          prompts: z.array(z.string().min(3)).describe('The full list of questions to ask. Replaces the stored list.'),
+          engines: z.array(z.enum(['chatgpt', 'perplexity', 'gemini', 'claude'])).min(1).describe('Assistants to ask.'),
+        })
+        .optional()
+        .describe('Weekly AI visibility checks. Omit to leave them unchanged.'),
+    },
+    pathArgs: ['project_id'],
+    path: (args) => `${project(args)}/tracking`,
+  },
+  {
     name: 'ai_visibility_check',
     title: 'AI visibility check',
     area: 'ai',
     kind: 'paid',
     description:
-      'Asks ChatGPT, Perplexity, Gemini and Claude up to 10 prompts and reports, per answer, whether the brand is mentioned or cited, its position, the competitors named and the sources cited. Use it to see how AI assistants talk about the brand; use listicles_find to get onto the pages they cite. $0.05 per prompt per assistant. Answers vary between runs: one check is a sample, not a verdict.',
-    price: '$0.05 per prompt per assistant',
+      'Asks ChatGPT, Perplexity, Gemini and Claude up to 10 prompts and reports, per answer, whether the brand is mentioned or cited, its position, the competitors named and the sources cited. Use it to see how AI assistants talk about the brand; use listicles_find to get onto the pages they cite. $0.08 per prompt per assistant. Answers vary between runs: one check is a sample, not a verdict.',
+    price: '$0.08 per prompt per assistant',
     method: 'POST',
     input: {
       prompts: z.array(z.string().min(3)).min(1).max(10).describe('1 to 10 questions a buyer would ask an AI assistant.'),
@@ -699,6 +762,7 @@ const toQueryValue = (value: unknown): string => (Array.isArray(value) ? value.m
 
 export const buildRequest = (tool: ToolDefinition, args: ToolArgs = {}): BuiltRequest => {
   const path = tool.path(args);
+  const method = tool.offMethod && args[tool.offMethod.arg] === false ? tool.offMethod.method : tool.method;
   const rest: ToolArgs = {};
   for (const [key, value] of Object.entries(args)) {
     if (tool.pathArgs.includes(key) || value === undefined || value === null) continue;
@@ -706,7 +770,7 @@ export const buildRequest = (tool: ToolDefinition, args: ToolArgs = {}): BuiltRe
   }
   const query = new URLSearchParams();
   let body: ToolArgs | undefined;
-  if (tool.method === 'GET' || tool.method === 'DELETE') {
+  if (method === 'GET' || method === 'DELETE') {
     for (const [key, value] of Object.entries(rest)) {
       if (Array.isArray(value) && value.length === 0) continue;
       query.set(key, toQueryValue(value));
@@ -714,5 +778,5 @@ export const buildRequest = (tool: ToolDefinition, args: ToolArgs = {}): BuiltRe
   } else {
     body = rest;
   }
-  return { method: tool.method, path, query, body, idempotencyKey: tool.idempotencyKey?.(args) };
+  return { method, path, query, body, idempotencyKey: tool.idempotencyKey?.(args) };
 };

@@ -15,7 +15,7 @@ export interface ApiResult<T = unknown> {
 }
 
 export interface ApiOptions {
-  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: unknown;
   key?: string | null;
   idempotencyKey?: string;
