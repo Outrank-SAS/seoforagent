@@ -6,7 +6,7 @@ import { SessionDemo } from '@/components/SessionDemo';
 import { SiteFooter } from '@/components/SiteFooter';
 import { SiteHeader } from '@/components/SiteHeader';
 import { GITHUB_PUBLIC, GITHUB_URL, OUTRANK_URL } from '@/lib/config';
-import { fetchPricing, linkPriceUsd, type Pricing } from '@/lib/pricing';
+import { LINK_EXAMPLE_DR, creditsToUsd, fetchPricing, linkCredits, linkPriceUsd, type LinkProductId, type Pricing } from '@/lib/pricing';
 
 export const revalidate = 300;
 
@@ -46,10 +46,10 @@ const CAPABILITIES = [
     href: '/docs#tool-listicles_find',
   },
   {
-    title: 'Backlinks',
-    body: `Your agent turns credit into Outrank backlink credits and sets a monthly budget. Outrank places the links on real sites. A DR 50 link is $${linkPriceUsd(50)}.`,
-    price: '$0.80 a backlink credit',
-    href: '/docs#billing',
+    title: 'Backlinks and listicles',
+    body: `Your agent sets a monthly budget and Outrank places links on real sites. A backlink inside an article is $${linkPriceUsd('backlink', LINK_EXAMPLE_DR)} at DR ${LINK_EXAMPLE_DR}. A spot in a "best X" list article is $${linkPriceUsd('listicle', LINK_EXAMPLE_DR)} at DR ${LINK_EXAMPLE_DR}.`,
+    price: 'From $1.60 per DR point',
+    href: '/pricing#backlinks',
   },
 ];
 
@@ -60,7 +60,7 @@ const COMPARISON: { label: string; values: Cell[] }[] = [
   { label: 'Made for AI agents', values: [true, true, false, false] },
   { label: 'Cost reported on every call', values: [true, false, false, false] },
   { label: 'Finds the lists AI assistants cite', values: [true, false, false, false] },
-  { label: 'Places backlinks for you', values: [true, false, false, false] },
+  { label: 'Places backlinks and listicles for you', values: [true, false, false, false] },
 ];
 
 const COLUMNS = ['SEOforAgent', 'OpenSEO', 'Ahrefs', 'Semrush'];
@@ -96,7 +96,10 @@ const listOf = (values: string[]): string => (values.length > 1 ? `${values.slic
 
 const buildFaq = (pricing: Pricing): FaqItem[] => {
   const { plans, credit, backlinks } = pricing;
-  const linkExample = Math.round(50 * backlinks.creditsPerDr * backlinks.creditUsd * 100) / 100;
+  const exampleOf = (id: LinkProductId): string => {
+    const { creditsPerDr } = backlinks.products[id];
+    return `DR x ${creditsPerDr} credits, so ${dollars(creditsToUsd(linkCredits(id, LINK_EXAMPLE_DR, creditsPerDr), backlinks.creditUsd))} at DR ${LINK_EXAMPLE_DR}`;
+  };
   return [
     {
       q: 'What does it cost?',
@@ -116,7 +119,7 @@ const buildFaq = (pricing: Pricing): FaqItem[] => {
     },
     {
       q: 'How does backlink buying work?',
-      a: `A backlink credit is $${backlinks.creditUsd.toFixed(2)} and a link costs its DR x ${backlinks.creditsPerDr} credits, so a DR 50 link is ${dollars(linkExample)}. Links are placed through the Outrank marketplace within the budget you set, and a lost link is refunded in credits.`,
+      a: `Your agent buys Outrank backlink credits at $${backlinks.creditUsd.toFixed(2)} each, and they pay for two products. A backlink is a contextual link to your page inside an article on a real site: ${exampleOf('backlink')}, at most ${backlinks.products.backlink.maxLinksPerDay ?? 2} a day. A listicle is your brand placed as an entry in a "best X" list article: ${exampleOf('listicle')}. Each has its own monthly budget, and a lost link is refunded in credits.`,
     },
     {
       q: 'Is my key safe?',

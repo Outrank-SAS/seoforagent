@@ -21,7 +21,7 @@ const SESSION = [
     tool: 'backlinks_suggest',
     args: 'vs invideo.io, pictory.ai',
     cents: 28,
-    result: '25 sites link to both and not to you. Outrank can place DR 40+ links from $128.',
+    result: '25 sites link to both and not to you. Outrank can place DR 40+ links from $64.',
   },
 ];
 

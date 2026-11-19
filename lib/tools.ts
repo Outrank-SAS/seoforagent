@@ -118,7 +118,7 @@ export const TOOLS: ToolDefinition[] = [
     area: 'account',
     kind: 'read',
     description:
-      'Returns the plans, one-time credit options, the price of every paid tool and the backlink credit rate. Use it to answer "what does this cost"; to price one specific call with its arguments, call that tool with dry_run: true instead. Free and works without a key. Prices are estimates for data tools, so quote them as "about".',
+      'Returns the plans, one-time credit options, the price of every paid tool, the backlink credit rate and what the two link products cost per DR point (backlinks 2 credits, listicle placements 4). Use it to answer "what does this cost"; to price one specific call with its arguments, call that tool with dry_run: true instead. Free and works without a key. Prices are estimates for data tools, so quote them as "about".',
     price: 'Free',
     method: 'GET',
     input: {},
@@ -640,7 +640,7 @@ export const TOOLS: ToolDefinition[] = [
     area: 'backlinks',
     kind: 'paid',
     description:
-      'The link-building planner: runs a link gap against up to 3 competitors, tags each domain with how to earn the link, and adds one clearly labelled block with what a backlink budget would place through Outrank. Use it to plan links; use backlinks_gap for raw gap data only. About $0.29 per run. Present the build options first and the buying option with its price, and never buy without the human yes.',
+      'The link-building planner: runs a link gap against up to 3 competitors, tags each domain with how to earn the link, and adds a buy field listing the two options Outrank can place for credits: a backlink first (DR × 2 credits), then a listicle placement (DR × 4 credits). Use it to plan links; use backlinks_gap for raw gap data only. About $0.29 per run. Present the build options first, then both buying options with their prices, and never buy without the human yes.',
     price: 'About $0.29 per run',
     method: 'POST',
     input: {
@@ -653,11 +653,11 @@ export const TOOLS: ToolDefinition[] = [
   },
   {
     name: 'backlinks_buying_get',
-    title: 'Backlink buying state',
+    title: 'Link buying state',
     area: 'backlinks',
     kind: 'read',
     description:
-      'Returns the project backlink buying state: backlink credits, monthly budget, minimum DR, listicle preference, target pages, whether buying is on and what blocks it. Use it before backlinks_buying_set or backlinks_quote. Free. Buying stays off until the project has credits and at least one active target page.',
+      'Returns the project link buying state. Two products are paid from the same backlink credits: listicles (the brand placed as an entry in a "best X" list article, DR × 4 credits) and backlinks (a contextual link inside an article on a real site, DR × 2 credits, at most 2 a day). Each product has its own on/off switch, monthly credit budget, spend this month and blockers; the credits, the minimum DR and the target pages are shared. Use it before backlinks_buying_set or backlinks_quote. Free. A product cannot be turned on while it has blockers, and backlinks.available is false for a site that already gets exchange links through an Outrank plan.',
     price: 'Free',
     method: 'GET',
     input: { project_id: projectId },
@@ -666,25 +666,33 @@ export const TOOLS: ToolDefinition[] = [
   },
   {
     name: 'backlinks_buying_set',
-    title: 'Backlink budget and rules',
+    title: 'Link budgets and rules',
     area: 'backlinks',
     kind: 'write',
     description:
-      'Sets the project backlink rules: monthly credit budget, minimum DR (30 to 70), listicle preference, target pages and the on/off switch. Outrank matching then places links within these rules. Use it after the human agreed to the budget; use backlinks_quote and backlinks_allocate to add credits. Free to call, but turning it on lets Outrank spend the project backlink credits: confirm with the human first.',
+      'Sets the project link buying rules for the two products paid from the same backlink credits. A listicle places the brand as an entry in a "best X" list article and costs DR × 4 credits (DR 40: 160 credits, $128). A backlink is a contextual link inside an article on a real site and costs DR × 2 credits (DR 40: 80 credits, $64), at most 2 a day. Each has its own on/off switch and monthly credit budget; the minimum DR (30 to 70) and the target pages are shared. Use backlinks_quote and backlinks_allocate to add credits. Free to call, but a product that is on spends the project credits: never turn one on or raise a budget without the human yes. Turning on a product that has blockers returns a 409 that lists them.',
     price: 'Free (spends backlink credits already allocated)',
     method: 'PATCH',
     input: {
       project_id: projectId,
-      monthly_credit_budget: z
-        .number()
-        .int()
-        .min(120)
-        .max(20000)
+      min_domain_rating: z.number().int().min(30).max(70).optional().describe('Lowest domain rating to accept, 30 to 70. Shared by both products.'),
+      listicles: z
+        .object({
+          enabled: z.boolean().optional().describe('Turn listicle placements on or off.'),
+          monthly_credit_budget: z.number().int().min(120).max(20000).optional().describe('Credits listicles may spend per month, 120 to 20,000.'),
+          topics: z.array(z.string()).max(10).optional().describe('Topics of list articles to appear in, up to 10. Replaces the stored list.'),
+        })
         .optional()
-        .describe('Backlink credits Outrank may spend per month, 120 to 20,000. A link costs DR × 4 credits.'),
-      min_domain_rating: z.number().int().min(30).max(70).optional().describe('Lowest domain rating to accept, 30 to 70.'),
-      prefer_listicle: z.boolean().optional().describe('Prefer placements inside list articles.'),
-      listicle_topics: z.array(z.string()).max(10).optional().describe('Topics of list articles you want to appear in. Replaces the stored list.'),
+        .describe(
+          'Listicle placements, DR × 4 credits each. Fields: enabled (boolean), monthly_credit_budget (credits per month, 120 to 20,000), topics (up to 10 topics of list articles to appear in; replaces the stored list).',
+        ),
+      backlinks: z
+        .object({
+          enabled: z.boolean().optional().describe('Turn backlinks on or off.'),
+          monthly_credit_budget: z.number().int().min(60).max(20000).optional().describe('Credits backlinks may spend per month, 60 to 20,000.'),
+        })
+        .optional()
+        .describe('Backlinks, DR × 2 credits each, at most 2 a day. Fields: enabled (boolean), monthly_credit_budget (credits per month, 60 to 20,000).'),
       target_pages: z
         .object({
           add: z.array(z.string().url()).max(10).optional().describe('Full URLs on the site to add as link targets.'),
@@ -693,19 +701,18 @@ export const TOOLS: ToolDefinition[] = [
           remove: z.array(z.string()).optional().describe('Target page ids to remove.'),
         })
         .optional()
-        .describe('Changes to the pages links point to. Ids come from backlinks_buying_get. Up to 10 pages.'),
-      enabled: z.boolean().optional().describe('Turn automatic placement on or off.'),
+        .describe('Changes to the pages links point to, shared by both products. Ids come from backlinks_buying_get. Up to 10 pages.'),
     },
     pathArgs: ['project_id'],
     path: (args) => `${project(args)}/backlinks`,
   },
   {
     name: 'backlinks_placements',
-    title: 'Backlink placements',
+    title: 'Link placements',
     area: 'backlinks',
     kind: 'read',
     description:
-      'Lists the project backlink placements with their state (matched, publishing, verifying, live, lost), DR, credits and live URL. Use it in weekly reviews and after buying; use backlinks_buying_get for budget and credits. Free. A lost link is refunded in credits, so report it as refunded, not as money lost.',
+      'Lists the project placements of both products. Each row has product (listicle or backlink), its state (matched, publishing, verifying, live, lost), DR, credits and live URL. Use it in weekly reviews and after buying; use backlinks_buying_get for budgets and credits. Free. A lost link is refunded in credits, so report it as refunded, not as money lost.',
     price: 'Free',
     method: 'GET',
     input: { project_id: projectId },
@@ -718,13 +725,13 @@ export const TOOLS: ToolDefinition[] = [
     area: 'backlinks',
     kind: 'read',
     description:
-      'Quotes turning account credit into Outrank backlink credits for a project, at $0.80 per backlink credit (a link costs DR × 4 credits, so a DR 50 link is 200 credits, $160). Returns quote_id, the dollar total and what it buys; valid 30 minutes. Use it before backlinks_allocate. Free and charges nothing. Show the total to the human and wait for an explicit yes before allocating.',
+      'Quotes turning account credit into Outrank backlink credits for a project, at $0.80 per credit, 60 credits ($48) or more. The credits pay for both products: a backlink costs DR × 2 credits (DR 40: 80 credits, $64) and a listicle placement costs DR × 4 credits (DR 40: 160 credits, $128). Returns quote_id, the dollar total and what it buys of each product at the project minimum DR; valid 30 minutes. Use it before backlinks_allocate. Free and charges nothing. Show the total to the human and wait for an explicit yes before allocating.',
     price: 'Free',
     method: 'POST',
     input: {
       project_id: projectId,
-      credits: z.number().int().min(120).max(20000).optional().describe('Backlink credits to buy, 120 to 20,000. Send credits or amount_usd.'),
-      amount_usd: z.number().min(96).max(16000).optional().describe('Dollar amount to convert. Send credits or amount_usd.'),
+      credits: z.number().int().min(60).max(20000).optional().describe('Backlink credits to buy, 60 to 20,000. Send credits or amount_usd.'),
+      amount_usd: z.number().min(48).max(16000).optional().describe('Dollar amount to convert, $48 to $16,000. Send credits or amount_usd.'),
     },
     pathArgs: ['project_id'],
     path: (args) => `${project(args)}/backlinks/quote`,
@@ -735,7 +742,7 @@ export const TOOLS: ToolDefinition[] = [
     area: 'backlinks',
     kind: 'money',
     description:
-      'Spends account credit on a quote from backlinks_quote and adds the backlink credits to the project. This moves money and cannot be undone by you. Use it only after the human said yes to the exact total; use backlinks_quote first. Costs the quoted total, $0.80 per backlink credit. confirm_usd must equal the quote total, and an expired quote returns QUOTE_EXPIRED: quote again and ask again.',
+      'Spends account credit on a quote from backlinks_quote and adds the backlink credits to the project, where they pay for backlinks (DR 40: 80 credits, $64) and listicle placements (DR 40: 160 credits, $128). This moves money and cannot be undone by you. Use it only after the human said yes to the exact total; use backlinks_quote first. Costs the quoted total, $0.80 per backlink credit, 60 credits ($48) or more. confirm_usd must equal the quote total, and an expired quote returns QUOTE_EXPIRED: quote again and ask again.',
     price: 'The quoted total ($0.80 per backlink credit)',
     method: 'POST',
     input: {

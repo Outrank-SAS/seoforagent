@@ -1,6 +1,6 @@
 # SEOforAgent
 
-The SEO tool for AI agents, by [Outrank](https://www.outrank.so). Connect it to Claude, ChatGPT, Codex or Cursor and your agent gets keyword and search data, AI visibility checks across ChatGPT, Perplexity, Gemini and Claude, a listicle hunt, and backlink buying through Outrank. Every call is priced in US dollars and reports what it cost.
+The SEO tool for AI agents, by [Outrank](https://www.outrank.so). Connect it to Claude, ChatGPT, Codex or Cursor and your agent gets keyword and search data, AI visibility checks across ChatGPT, Perplexity, Gemini and Claude, a listicle hunt, and backlinks and listicle placements bought through Outrank. Every call is priced in US dollars and reports what it cost.
 
 This repository is the client: the website at [seoforagent.com](https://seoforagent.com), the dashboard at `/app`, the hosted MCP server at `/mcp`, the REST proxy at `/api/v1`, the agent skills and the Claude Code plugin. It is MIT licensed. **The service itself (data, billing, accounts, backlink matching) is hosted by Outrank and is not part of this repository.** Every request is forwarded to the Outrank agent API.
 
@@ -67,7 +67,7 @@ These apps cannot set headers, so the key goes in the URL: `https://seoforagent.
 | Listicle hunt | `listicles_find`, `listicles_list`, `listicles_get`, `listicles_pitch` |
 | Backlinks | `backlinks_profile`, `backlinks_gap`, `backlinks_suggest`, `backlinks_buying_get`, `backlinks_buying_set`, `backlinks_placements`, `backlinks_quote`, `backlinks_allocate` |
 
-All tools are defined in one registry, [`lib/tools.ts`](lib/tools.ts): name, description, price, zod input schema, HTTP method and route, and kind (read, paid, write or money). Paid tools accept `dry_run`, `max_cost_usd` and `fresh`. `backlinks_allocate` moves money: it needs a `quote_id` and the exact `confirm_usd`, sends an `Idempotency-Key`, and is annotated `destructiveHint: true`. Full reference: [/docs](https://seoforagent.com/docs) or [/docs.md](https://seoforagent.com/docs.md).
+All tools are defined in one registry, [`lib/tools.ts`](lib/tools.ts): name, description, price, zod input schema, HTTP method and route, and kind (read, paid, write or money). Paid tools accept `dry_run`, `max_cost_usd` and `fresh`. `backlinks_allocate` moves money: it needs a `quote_id` and the exact `confirm_usd`, sends an `Idempotency-Key`, and is annotated `destructiveHint: true`. `backlinks_buying_set` controls two products paid from the same backlink credits ($0.80 each): backlinks (a contextual link inside an article, DR × 2 credits, $64 at DR 40, at most 2 a day) and listicles (the brand placed in a "best X" list article, DR × 4 credits, $128 at DR 40). Each has its own switch and monthly credit budget. Full reference: [/docs](https://seoforagent.com/docs) or [/docs.md](https://seoforagent.com/docs.md).
 
 ## Skills
 

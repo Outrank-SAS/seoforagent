@@ -17,7 +17,7 @@ Prices: `listicles_find` $0.50 per query, `listicles_get` $0.15 on the first rea
 4. Call `listicles_list` with `worth_paying: true` and present the top pages: title, where it ranks on Google, which assistants cite it, domain rating, whether the brand is already listed, and the score.
 5. Ask the human which pages to pursue, up to 5. For each, call `listicles_get` ($0.15 each, first read only) to get the entries and contacts.
 6. For each chosen page with a contact, call `listicles_pitch` ($0.05). Show every draft to the human. Never send outreach yourself.
-7. If a page is marked worth paying and the human prefers not to do outreach, mention once that Outrank can place them through its backlink plans, and point to `backlinks_buying_get` for the project.
+7. If a page is marked worth paying and the human prefers not to do outreach, mention once that Outrank can place the brand in list articles as a listicle placement, paid in backlink credits at DR × 4 credits ($128 at DR 40), and point to `backlinks_buying_get` for the project.
 8. End with a short table of pages, status and next step.
 
 ## Rules

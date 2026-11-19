@@ -120,7 +120,7 @@ export const AGENT_PAGES: AgentPage[] = [
         cost: 'About $0.12 for two seed keywords.',
       },
       {
-        prompt: 'Run my weekly SEO review: rankings, backlinks placed, and what to do next.',
+        prompt: 'Run my weekly SEO review: rankings, backlinks and listicles placed, and what to do next.',
         tools: ['rank_history', 'backlinks_placements', 'gsc_performance'],
         cost: 'Free. These three tools only read what is already stored.',
       },

@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 import { MCP_URL, PUBLIC_API_BASE, SITE_URL } from './config';
-import { BACKLINK_CREDIT_USD, BACKLINK_CREDITS_PER_DR, FALLBACK_PLANS, linkPriceUsd } from './pricing';
+import { BACKLINK_CREDIT_USD, FALLBACK_PLANS, LINK_EXAMPLE_DR, LINK_MIN_ALLOCATION_CREDITS, LINK_PRODUCTS, creditsToUsd, linkCredits, linkPriceUsd } from './pricing';
 import { AGENTS, KEY_PLACEHOLDER, setupPrompt } from './setup';
 import { AREA_LABELS, TOOLS, type ToolArea, type ToolDefinition } from './tools';
 
@@ -72,7 +72,9 @@ export const BILLING_POINTS = [
   'Every paid tool accepts dry_run (price only, free), max_cost_usd (refuse above this amount) and fresh (skip the free 24-hour repeat).',
   'Per-call and daily spend limits are set by the human in the dashboard. A call over a limit returns OVER_SPEND_LIMIT and is not charged.',
   'Scheduled tracking (Growth and above) re-runs rank checks daily or weekly and AI visibility checks weekly. Each run is charged like the same manual call; tracking_get shows the estimate per run.',
-  `Backlinks: credit converts to Outrank backlink credits at $${BACKLINK_CREDIT_USD.toFixed(2)} each. A link costs DR × ${BACKLINK_CREDITS_PER_DR} credits, so a DR 50 link is 200 credits, $${linkPriceUsd(50)}. Buying is two calls: backlinks_quote, then backlinks_allocate with the quote_id and the exact confirm_usd the human approved.`,
+  `Link buying: credit converts to Outrank backlink credits at $${BACKLINK_CREDIT_USD.toFixed(2)} each, ${LINK_MIN_ALLOCATION_CREDITS} credits ($${creditsToUsd(LINK_MIN_ALLOCATION_CREDITS)}) or more. Buying credits is two calls: backlinks_quote, then backlinks_allocate with the quote_id and the exact confirm_usd the human approved.`,
+  `The credits pay for two products. A backlink is a contextual link to your page inside an article on a real site: DR × ${LINK_PRODUCTS.backlink.creditsPerDr} credits, so a DR ${LINK_EXAMPLE_DR} backlink is ${linkCredits('backlink', LINK_EXAMPLE_DR)} credits, $${linkPriceUsd('backlink', LINK_EXAMPLE_DR)}, at most ${LINK_PRODUCTS.backlink.maxLinksPerDay} a day. A listicle is your brand placed as an entry in a "best X" list article: DR × ${LINK_PRODUCTS.listicle.creditsPerDr} credits, so a DR ${LINK_EXAMPLE_DR} listicle is ${linkCredits('listicle', LINK_EXAMPLE_DR)} credits, $${linkPriceUsd('listicle', LINK_EXAMPLE_DR)}.`,
+  'Each product has its own on/off switch and its own monthly credit budget, set with backlinks_buying_set. The minimum DR (30 to 70) and the target pages are shared, and a lost link is refunded in credits.',
 ];
 
 export const ERROR_CODES: [string, string][] = [
@@ -90,7 +92,7 @@ export const ERROR_CODES: [string, string][] = [
 ];
 
 export const ACCOUNT_ROUTES: [string, string][] = [
-  ['GET /sfa/pricing', 'Plans, credit options, tool prices and the backlink rate. No key needed.'],
+  ['GET /sfa/pricing', 'Plans, credit options, tool prices, the backlink credit rate and both link products. No key needed.'],
   ['POST /sfa/demo/domain', 'Body: domain. A free domain overview, 3 a day per visitor. No key needed.'],
   ['GET /sfa/shared/:token', 'The public copy of a result shared with results_share. No key needed.'],
   ['POST /sfa/activation/checkout', 'Body: key, kind (plan or credit), plan or amount_usd, return_origin, referral. Returns checkout_url. No key needed.'],
@@ -117,7 +119,7 @@ export const CURL_EXAMPLES: { title: string; code: string }[] = [
   },
   {
     title: 'Quote, then allocate backlink credit (after the human says yes)',
-    code: `curl -X POST ${PUBLIC_API_BASE}/sfa/projects/$PROJECT_ID/backlinks/quote \\\n  -H "Authorization: Bearer $SEOFORAGENT_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '{"credits":200}'\n\ncurl -X POST ${PUBLIC_API_BASE}/sfa/projects/$PROJECT_ID/backlinks/allocate \\\n  -H "Authorization: Bearer $SEOFORAGENT_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -H "Idempotency-Key: sfa-allocate-$QUOTE_ID" \\\n  -d '{"quote_id":"'$QUOTE_ID'","confirm_usd":160}'`,
+    code: `curl -X POST ${PUBLIC_API_BASE}/sfa/projects/$PROJECT_ID/backlinks/quote \\\n  -H "Authorization: Bearer $SEOFORAGENT_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '{"credits":160}'\n\ncurl -X POST ${PUBLIC_API_BASE}/sfa/projects/$PROJECT_ID/backlinks/allocate \\\n  -H "Authorization: Bearer $SEOFORAGENT_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -H "Idempotency-Key: sfa-allocate-$QUOTE_ID" \\\n  -d '{"quote_id":"'$QUOTE_ID'","confirm_usd":128}'`,
   },
 ];
 
@@ -128,7 +130,7 @@ export const docsMarkdown = (): string => {
   const parts: string[] = [];
   parts.push('# SEOforAgent docs', '');
   parts.push(
-    'SEOforAgent is the SEO tool for AI agents, by Outrank. Connect it to Claude, ChatGPT, Codex or Cursor over MCP and your agent gets keyword and search data, AI visibility checks across ChatGPT, Perplexity, Gemini and Claude, a listicle hunt, and backlink buying through Outrank. Every call is priced in US dollars.',
+    'SEOforAgent is the SEO tool for AI agents, by Outrank. Connect it to Claude, ChatGPT, Codex or Cursor over MCP and your agent gets keyword and search data, AI visibility checks across ChatGPT, Perplexity, Gemini and Claude, a listicle hunt, and backlinks and listicle placements bought through Outrank. Every call is priced in US dollars.',
     '',
   );
   parts.push('## Quickstart', '');

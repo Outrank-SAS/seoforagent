@@ -13,7 +13,7 @@ description: Run a weekly SEO and AI visibility review for a website with SEOfor
 2. Call `projects_get`. Read the research already paid for this week so you do not buy it again.
 3. Call `rank_history` (free). If the last check is older than 6 days, call `rank_check` on the tracked keywords with `max_cost_usd: 0.40` (up to $0.028 per keyword).
 4. If Search Console is connected, call `gsc_performance` for the last 7 days against the 7 before, by query and by page (free). Note the biggest gains and drops.
-5. Call `backlinks_placements` and `backlinks_buying_get` (free): new live links, lost links (refunded in credits) and credits left.
+5. Call `backlinks_placements` and `backlinks_buying_get` (free): new live links by product (backlink or listicle), lost links (refunded in credits), what each product spent of its monthly budget, and credits left.
 6. Call `listicles_list` (free) for any pages still to pitch.
 7. Call `wallet_get` (free) and report what was spent this week.
 8. Write the review: what moved, why it probably moved, and exactly three actions for the week, each with its cost. Keep it under 250 words.

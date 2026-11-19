@@ -68,8 +68,8 @@ const DocsPage = () => (
       <main id="main" className="prose-docs min-w-0">
         <h1 className="text-4xl font-semibold tracking-tight">Docs</h1>
         <p className="text-lg">
-          SEOforAgent gives your AI agent keyword and search data, AI visibility checks, a listicle hunt and backlink buying through Outrank, over MCP or REST. Every call is
-          priced in US dollars.
+          SEOforAgent gives your AI agent keyword and search data, AI visibility checks, a listicle hunt, and backlinks and listicle placements bought through Outrank, over
+          MCP or REST. Every call is priced in US dollars.
         </p>
 
         <h2 id="quickstart">Quickstart</h2>

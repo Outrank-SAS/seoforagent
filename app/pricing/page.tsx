@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { SiteFooter } from '@/components/SiteFooter';
 import { SiteHeader } from '@/components/SiteHeader';
 import { OUTRANK_URL } from '@/lib/config';
-import { fetchPricing, linkPriceUsd } from '@/lib/pricing';
+import { LINK_EXAMPLE_DR, LINK_MIN_ALLOCATION_CREDITS, LINK_PRODUCTS, LINK_PRODUCT_IDS, creditsToUsd, fetchPricing, linkCredits } from '@/lib/pricing';
 import { AREA_LABELS, TOOLS, TOOL_BY_NAME, type ToolArea } from '@/lib/tools';
 
 export const revalidate = 300;
@@ -11,7 +11,7 @@ export const revalidate = 300;
 export const metadata: Metadata = {
   title: 'Pricing',
   description:
-    'SEOforAgent plans from $9 a month with more usage included than they cost, one-time credit from $10 to $5,000, and backlinks at $0.80 per backlink credit.',
+    'SEOforAgent plans from $9 a month with more usage included than they cost, one-time credit from $10 to $5,000, backlinks at $1.60 per DR point and listicle placements at $3.20 per DR point.',
   alternates: { canonical: '/pricing' },
 };
 
@@ -40,6 +40,10 @@ const FAQ = [
     a: 'The same call from the same account within 24 hours is free, unless the agent asks for fresh data.',
   },
   {
+    q: 'What is the difference between a backlink and a listicle?',
+    a: 'A backlink is a contextual link to your page inside an article on a real site. It costs $1.60 per DR point, so $64 at DR 40. A listicle is your brand placed as an entry in a "best X" list article. It costs $3.20 per DR point, so $128 at DR 40. Both are paid from the same backlink credits, and each has its own monthly budget.',
+  },
+  {
     q: 'Can I get a refund?',
     a: 'Write to support@outrank.so from the email you paid with. Charges for calls that failed are released automatically, so you never pay for an error.',
   },
@@ -61,7 +65,26 @@ const PricingPage = async () => {
     grouped.set(area, [...(grouped.get(area) ?? []), { tool: row.tool, unit: row.unit }]);
   }
   const freeTools = TOOLS.filter((tool) => tool.kind !== 'paid' && tool.kind !== 'money').map((tool) => tool.name);
-  const { creditUsd, creditsPerDr } = pricing.backlinks;
+  const { creditUsd, minDr, maxDr, products } = pricing.backlinks;
+  const linkRows = LINK_PRODUCT_IDS.map((id) => {
+    const { creditsPerDr, maxLinksPerDay } = products[id];
+    const costAt = (dr: number) => {
+      const credits = linkCredits(id, dr, creditsPerDr);
+      return { credits, usd: creditsToUsd(credits, creditUsd) };
+    };
+    return {
+      id,
+      name: LINK_PRODUCTS[id].name,
+      role: LINK_PRODUCTS[id].role,
+      what: LINK_PRODUCTS[id].what,
+      creditsPerDr,
+      maxLinksPerDay,
+      perDrUsd: creditsToUsd(creditsPerDr, creditUsd),
+      example: costAt(LINK_EXAMPLE_DR),
+      low: costAt(minDr),
+      high: costAt(maxDr),
+    };
+  });
 
   return (
     <>
@@ -187,25 +210,105 @@ const PricingPage = async () => {
 
         <section aria-labelledby="backlinks" className="mt-16 rounded-2xl border border-line p-6 sm:p-8">
           <h2 id="backlinks" className="text-2xl font-semibold">
-            Backlinks
+            Backlinks and listicles
           </h2>
-          <div className="mt-4 grid gap-6 md:grid-cols-3">
-            <div>
-              <p className="font-mono text-3xl font-semibold">{money(creditUsd, 2)}</p>
-              <p className="text-muted">per Outrank backlink credit, paid from your credit or included usage</p>
-            </div>
-            <div>
-              <p className="font-mono text-3xl font-semibold">DR × {creditsPerDr}</p>
-              <p className="text-muted">credits per link, so {money(creditUsd * creditsPerDr, 2)} per DR point</p>
-            </div>
-            <div>
-              <p className="font-mono text-3xl font-semibold">{money(linkPriceUsd(50))}</p>
-              <p className="text-muted">for a DR 50 link (200 credits). DR 30 is {money(linkPriceUsd(30))}, DR 70 is {money(linkPriceUsd(70))}.</p>
-            </div>
+          <p className="mt-2 max-w-3xl text-muted">
+            Two products, paid from the same Outrank backlink credits. A credit is <span className="font-mono text-ink">{money(creditUsd, 2)}</span>, taken from your credit or
+            included usage. The price of a link follows the DR of the site it is on.
+          </p>
+          <ul className="mt-6 grid gap-4 md:hidden" aria-label="Backlink and listicle prices">
+            {linkRows.map((row) => (
+              <li key={row.id} className="rounded-2xl border border-line p-5">
+                <p className="font-semibold">{row.name}</p>
+                <p className="text-sm text-muted">{row.role}</p>
+                <p className="mt-3 text-sm text-muted">
+                  {row.what}
+                  {row.maxLinksPerDay ? ` At most ${row.maxLinksPerDay} a day.` : ''}
+                </p>
+                <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-line pt-4 text-sm">
+                  <div>
+                    <dt className="text-muted">Per DR point</dt>
+                    <dd className="font-mono font-semibold">{money(row.perDrUsd, 2)}</dd>
+                    <dd className="text-muted">DR × {row.creditsPerDr} credits</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted">DR {LINK_EXAMPLE_DR} example</dt>
+                    <dd className="font-mono font-semibold">{money(row.example.usd)}</dd>
+                    <dd className="text-muted">{row.example.credits} credits</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted">DR {minDr}</dt>
+                    <dd className="font-mono">{money(row.low.usd)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted">DR {maxDr}</dt>
+                    <dd className="font-mono">{money(row.high.usd)}</dd>
+                  </div>
+                </dl>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-6 hidden overflow-x-auto rounded-2xl border border-line md:block">
+            <table className="w-full min-w-[820px] border-collapse text-left text-sm">
+              <caption className="sr-only">Backlink and listicle prices</caption>
+              <thead className="bg-surface">
+                <tr>
+                  <th scope="col" className="p-4 font-semibold">
+                    Product
+                  </th>
+                  <th scope="col" className="p-4 font-semibold">
+                    What you get
+                  </th>
+                  <th scope="col" className="p-4 font-semibold">
+                    Price per DR point
+                  </th>
+                  <th scope="col" className="p-4 font-semibold">
+                    DR {LINK_EXAMPLE_DR} example
+                  </th>
+                  <th scope="col" className="p-4 font-semibold">
+                    DR {minDr}
+                  </th>
+                  <th scope="col" className="p-4 font-semibold">
+                    DR {maxDr}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {linkRows.map((row) => (
+                  <tr key={row.id} className="border-t border-line align-top">
+                    <th scope="row" className="p-4">
+                      <span className="block font-semibold">{row.name}</span>
+                      <span className="block text-sm font-normal whitespace-nowrap text-muted">{row.role}</span>
+                    </th>
+                    <td className="max-w-xs p-4 text-muted">
+                      {row.what}
+                      {row.maxLinksPerDay ? ` At most ${row.maxLinksPerDay} a day.` : ''}
+                    </td>
+                    <td className="p-4 whitespace-nowrap">
+                      <span className="block font-mono font-semibold">{money(row.perDrUsd, 2)}</span>
+                      <span className="block text-muted">DR × {row.creditsPerDr} credits</span>
+                    </td>
+                    <td className="p-4 whitespace-nowrap">
+                      <span className="block font-mono font-semibold">{money(row.example.usd)}</span>
+                      <span className="block text-muted">{row.example.credits} credits</span>
+                    </td>
+                    <td className="p-4 font-mono whitespace-nowrap">{money(row.low.usd)}</td>
+                    <td className="p-4 font-mono whitespace-nowrap">{money(row.high.usd)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
           <ul className="mt-6 list-disc space-y-2 pl-5 text-muted">
-            <li>Your agent quotes an amount, shows you the total and allocates it only after your yes.</li>
-            <li>You set a monthly budget, a minimum DR, target pages and whether to prefer listicles. Outrank matching places links on real sites within those rules.</li>
+            <li>
+              Your agent quotes an amount, shows you the total and adds the credits only after your yes. The smallest amount is {LINK_MIN_ALLOCATION_CREDITS} credits (
+              {money(creditsToUsd(LINK_MIN_ALLOCATION_CREDITS, creditUsd))}).
+            </li>
+            <li>Each product has its own on/off switch and its own monthly credit budget, so you decide how the credits are split.</li>
+            <li>
+              The minimum DR ({minDr} to {maxDr}) and the target pages are shared by both. Outrank matching places links on real sites within those rules.
+            </li>
+            <li>Backlinks are placed at most {products.backlink.maxLinksPerDay ?? 2} a day. A listicle placement is always a list article.</li>
             <li>A link that is lost is refunded in credits.</li>
           </ul>
         </section>

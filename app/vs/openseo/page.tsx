@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SiteFooter } from '@/components/SiteFooter';
 import { SiteHeader } from '@/components/SiteHeader';
-import { FALLBACK_PLANS, linkPriceUsd } from '@/lib/pricing';
+import { FALLBACK_PLANS, LINK_EXAMPLE_DR, linkPriceUsd } from '@/lib/pricing';
 import { buttonPrimary, buttonSecondary } from '@/lib/styles';
 import { TOOLS } from '@/lib/tools';
 
@@ -32,7 +32,7 @@ const ROWS: { label: string; sfa: Cell; openseo: Cell }[] = [
   { label: 'GA4', sfa: false, openseo: true },
   { label: 'Dollar cost reported on every call', sfa: true, openseo: false },
   { label: 'Finds the listicles AI assistants cite', sfa: true, openseo: false },
-  { label: 'Places backlinks for you', sfa: 'Yes, through Outrank', openseo: false },
+  { label: 'Places backlinks and listicles for you', sfa: 'Yes, through Outrank', openseo: false },
 ];
 
 const Mark = ({ on }: { on: boolean }) =>
@@ -60,7 +60,7 @@ const CHOOSE = [
     points: [
       'You want your agent to know what it spends. Every response carries the dollar cost and the balance left.',
       'You care about being recommended by AI. It asks ChatGPT, Perplexity, Gemini and Claude, then finds the lists they cite.',
-      `You want links placed, not only analysed. Your agent sets a budget and Outrank places them, from $${linkPriceUsd(30)} for a DR 30 link.`,
+      `You want links placed, not only analysed. Your agent sets a budget and Outrank places them: a DR ${LINK_EXAMPLE_DR} backlink is $${linkPriceUsd('backlink', LINK_EXAMPLE_DR)}, a DR ${LINK_EXAMPLE_DR} spot in a "best X" list is $${linkPriceUsd('listicle', LINK_EXAMPLE_DR)}.`,
     ],
   },
 ];

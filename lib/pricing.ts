@@ -18,12 +18,19 @@ export interface ToolPrice {
   description: string;
 }
 
+export type LinkProductId = 'backlink' | 'listicle';
+
+export interface LinkProductPrice {
+  creditsPerDr: number;
+  maxLinksPerDay?: number;
+}
+
 export interface Pricing {
   source: 'live' | 'fallback';
   plans: Plan[];
   credit: { minUsd: number; maxUsd: number; presetsUsd: number[] };
   tools: ToolPrice[];
-  backlinks: { creditUsd: number; creditsPerDr: number; minDr: number; maxDr: number };
+  backlinks: { creditUsd: number; minDr: number; maxDr: number; products: Record<LinkProductId, LinkProductPrice> };
   outrankIncluded: { includedUsd: number; projects: number };
 }
 
@@ -39,9 +46,41 @@ export const CREDIT_PRESETS_USD = [25, 100, 500, 2000];
 export const CREDIT_MIN_USD = 10;
 export const CREDIT_MAX_USD = 5000;
 export const BACKLINK_CREDIT_USD = 0.8;
-export const BACKLINK_CREDITS_PER_DR = 4;
+export const BACKLINK_MIN_DR = 30;
+export const BACKLINK_MAX_DR = 70;
+export const LINK_EXAMPLE_DR = 40;
+export const LINK_MIN_ALLOCATION_CREDITS = 60;
+export const LINK_MAX_CREDITS = 20000;
+export const LINK_PRODUCT_IDS: LinkProductId[] = ['backlink', 'listicle'];
 
-export const linkPriceUsd = (dr: number): number => Math.round(dr * BACKLINK_CREDITS_PER_DR * BACKLINK_CREDIT_USD * 100) / 100;
+export const LINK_PRODUCTS: Record<LinkProductId, { name: string; role: string; what: string; creditsPerDr: number; minBudgetCredits: number; maxLinksPerDay?: number }> = {
+  backlink: {
+    name: 'Backlinks',
+    role: 'The everyday option',
+    what: 'A contextual link to your page inside an article on a real site, from the Outrank network of customer blogs.',
+    creditsPerDr: 2,
+    minBudgetCredits: 60,
+    maxLinksPerDay: 2,
+  },
+  listicle: {
+    name: 'Listicles',
+    role: 'The premium option',
+    what: 'Your brand placed as an entry in a "best X" list article on a real site.',
+    creditsPerDr: 4,
+    minBudgetCredits: 120,
+  },
+};
+
+export const FALLBACK_LINK_PRICES: Record<LinkProductId, LinkProductPrice> = {
+  backlink: { creditsPerDr: LINK_PRODUCTS.backlink.creditsPerDr, maxLinksPerDay: LINK_PRODUCTS.backlink.maxLinksPerDay },
+  listicle: { creditsPerDr: LINK_PRODUCTS.listicle.creditsPerDr },
+};
+
+export const linkCredits = (product: LinkProductId, dr: number, creditsPerDr = LINK_PRODUCTS[product].creditsPerDr): number => Math.round(dr * creditsPerDr);
+
+export const creditsToUsd = (credits: number, creditUsd = BACKLINK_CREDIT_USD): number => Math.round(credits * creditUsd * 100) / 100;
+
+export const linkPriceUsd = (product: LinkProductId, dr: number): number => creditsToUsd(linkCredits(product, dr));
 
 export const FALLBACK_TOOL_PRICES: ToolPrice[] = TOOLS.filter((tool) => tool.kind === 'paid').map((tool) => ({
   tool: tool.name,
@@ -54,7 +93,7 @@ export const FALLBACK_PRICING: Pricing = {
   plans: FALLBACK_PLANS,
   credit: { minUsd: CREDIT_MIN_USD, maxUsd: CREDIT_MAX_USD, presetsUsd: CREDIT_PRESETS_USD },
   tools: FALLBACK_TOOL_PRICES,
-  backlinks: { creditUsd: BACKLINK_CREDIT_USD, creditsPerDr: BACKLINK_CREDITS_PER_DR, minDr: 30, maxDr: 70 },
+  backlinks: { creditUsd: BACKLINK_CREDIT_USD, minDr: BACKLINK_MIN_DR, maxDr: BACKLINK_MAX_DR, products: FALLBACK_LINK_PRICES },
   outrankIncluded: { includedUsd: 10, projects: 50 },
 };
 
@@ -66,6 +105,11 @@ const num = (...values: unknown[]): number | undefined => {
     if (typeof parsed === 'number' && Number.isFinite(parsed)) return parsed;
   }
   return undefined;
+};
+
+const positive = (value: unknown): number | undefined => {
+  const parsed = num(value);
+  return parsed !== undefined && parsed > 0 ? parsed : undefined;
 };
 
 const usdOf = (row: Loose, usdKey: string, centsKey: string, microKey?: string): number | undefined => {
@@ -126,6 +170,15 @@ export const normalizePricing = (payload: unknown): Pricing | null => {
         })
     : FALLBACK_TOOL_PRICES;
   const backlinks = (data.backlinks && typeof data.backlinks === 'object' ? data.backlinks : {}) as Loose;
+  const linkProducts = (backlinks.products && typeof backlinks.products === 'object' ? backlinks.products : {}) as Loose;
+  const linkPriceOf = (id: LinkProductId): LinkProductPrice => {
+    const row = (linkProducts[id] && typeof linkProducts[id] === 'object' ? linkProducts[id] : {}) as Loose;
+    const fallback = FALLBACK_LINK_PRICES[id];
+    return {
+      creditsPerDr: positive(row.credits_per_dr_point) ?? fallback.creditsPerDr,
+      maxLinksPerDay: positive(row.max_links_per_day) ?? fallback.maxLinksPerDay,
+    };
+  };
   const included = (data.outrank_included && typeof data.outrank_included === 'object' ? data.outrank_included : {}) as Loose;
   return {
     source: 'live',
@@ -138,9 +191,9 @@ export const normalizePricing = (payload: unknown): Pricing | null => {
     tools: tools.length > 0 ? tools : FALLBACK_TOOL_PRICES,
     backlinks: {
       creditUsd: num(backlinks.usd_per_credit) ?? usdOf(backlinks, 'credit_usd', 'credit_cents', 'credit_microusd') ?? BACKLINK_CREDIT_USD,
-      creditsPerDr: num(backlinks.credits_per_dr_point, backlinks.credits_per_dr) ?? BACKLINK_CREDITS_PER_DR,
-      minDr: num(backlinks.min_dr) ?? 30,
-      maxDr: num(backlinks.max_dr) ?? 70,
+      minDr: num(backlinks.min_dr) ?? BACKLINK_MIN_DR,
+      maxDr: num(backlinks.max_dr) ?? BACKLINK_MAX_DR,
+      products: { backlink: linkPriceOf('backlink'), listicle: linkPriceOf('listicle') },
     },
     outrankIncluded: {
       includedUsd: usdOf(included, 'included_usd', 'included_cents', 'included_microusd') ?? 10,

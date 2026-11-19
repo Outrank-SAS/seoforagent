@@ -142,6 +142,53 @@ describe('tool registry', () => {
     expect(schema.safeParse({ project_id: 'prj_1', confirm_usd: 160 }).success).toBe(false);
   });
 
+  it('sets link buying per product and drops the old single-product inputs', () => {
+    const tool = TOOL_BY_NAME.get('backlinks_buying_set')!;
+    expect(Object.keys(tool.input).sort()).toEqual(['backlinks', 'listicles', 'min_domain_rating', 'project_id', 'target_pages']);
+    const args = {
+      project_id: 'prj_1',
+      min_domain_rating: 40,
+      listicles: { enabled: true, monthly_credit_budget: 320, topics: ['ai video editors'] },
+      backlinks: { enabled: true, monthly_credit_budget: 160 },
+    };
+    const request = buildRequest(tool, args);
+    expect(request.method).toBe('PATCH');
+    expect(request.body).toEqual({ min_domain_rating: 40, listicles: args.listicles, backlinks: args.backlinks });
+    const schema = z.object(tool.input);
+    expect(schema.safeParse(args).success).toBe(true);
+    expect(schema.safeParse({ project_id: 'prj_1', backlinks: { monthly_credit_budget: 60 } }).success).toBe(true);
+    expect(schema.safeParse({ project_id: 'prj_1', backlinks: { monthly_credit_budget: 59 } }).success).toBe(false);
+    expect(schema.safeParse({ project_id: 'prj_1', listicles: { monthly_credit_budget: 120 } }).success).toBe(true);
+    expect(schema.safeParse({ project_id: 'prj_1', listicles: { monthly_credit_budget: 119 } }).success).toBe(false);
+    expect(schema.safeParse({ project_id: 'prj_1', listicles: { topics: Array.from({ length: 11 }, (_, index) => `topic ${index}`) } }).success).toBe(false);
+    expect(schema.safeParse({ project_id: 'prj_1', min_domain_rating: 71 }).success).toBe(false);
+    expect(tool.description).toContain('DR × 4 credits');
+    expect(tool.description).toContain('DR × 2 credits');
+    expect(tool.description).toMatch(/never turn one on or raise a budget without the human yes/);
+  });
+
+  it('quotes from 60 credits or $48 and prices both products at DR 40', () => {
+    const quote = TOOL_BY_NAME.get('backlinks_quote')!;
+    const schema = z.object(quote.input);
+    expect(schema.safeParse({ project_id: 'prj_1', credits: 60 }).success).toBe(true);
+    expect(schema.safeParse({ project_id: 'prj_1', credits: 59 }).success).toBe(false);
+    expect(schema.safeParse({ project_id: 'prj_1', amount_usd: 48 }).success).toBe(true);
+    expect(schema.safeParse({ project_id: 'prj_1', amount_usd: 47 }).success).toBe(false);
+    for (const name of ['backlinks_quote', 'backlinks_allocate']) {
+      const description = TOOL_BY_NAME.get(name)!.description;
+      expect(description).toContain('80 credits, $64');
+      expect(description).toContain('160 credits, $128');
+      expect(description).toContain('60 credits ($48)');
+    }
+  });
+
+  it('describes both link products where agents read about buying', () => {
+    expect(TOOL_BY_NAME.get('backlinks_buying_get')!.description).toMatch(/own on\/off switch, monthly credit budget, spend this month and blockers/);
+    expect(TOOL_BY_NAME.get('backlinks_placements')!.description).toContain('product (listicle or backlink)');
+    expect(TOOL_BY_NAME.get('backlinks_suggest')!.description).toMatch(/buy field .* a backlink first .* then a listicle placement/);
+    for (const tool of TOOLS) expect(tool.description).not.toMatch(/prefer_listicle|listicle preference|listicle_topics/);
+  });
+
   it('shares with POST and unshares with DELETE, without sending the switch', () => {
     const tool = TOOL_BY_NAME.get('results_share')!;
     const share = buildRequest(tool, { result_id: 'res_1' });
