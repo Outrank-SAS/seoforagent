@@ -56,12 +56,13 @@ These apps cannot set headers, so the key goes in the URL: `https://seoforagent.
 
 | Area | Tools |
 |---|---|
-| Account | `whoami`, `wallet_get`, `pricing_get`, `account_link`, `results_get` |
+| Account | `whoami`, `wallet_get`, `pricing_get`, `account_link`, `results_get`, `results_share` |
 | Projects | `projects_list`, `projects_create`, `projects_get`, `projects_update` |
 | Search Console | `gsc_connect`, `gsc_performance` |
 | Keywords and search results | `keywords_research`, `keywords_metrics`, `serp_results`, `serp_competitors` |
 | Domains | `domain_overview`, `domain_keywords` |
 | Rank tracking | `rank_check`, `rank_history` |
+| Scheduled tracking | `tracking_get`, `tracking_set` |
 | AI visibility | `ai_visibility_check` |
 | Listicle hunt | `listicles_find`, `listicles_list`, `listicles_get`, `listicles_pitch` |
 | Backlinks | `backlinks_profile`, `backlinks_gap`, `backlinks_suggest`, `backlinks_buying_get`, `backlinks_buying_set`, `backlinks_placements`, `backlinks_quote`, `backlinks_allocate` |
@@ -82,19 +83,26 @@ dashboard (/app, key in localStorage) ┘
 ```
 
 - `app/mcp/route.ts` and `app/mcp/[key]/route.ts`: stateless Streamable HTTP MCP server. A fresh `McpServer` per request, JSON responses, `GET` and `DELETE` answer 405. The key comes from `Authorization: Bearer` or the path. Without a key, tools list but calls return a message pointing to seoforagent.com (except `pricing_get`, which is public).
-- `app/api/v1/[...path]/route.ts`: forwards GET, POST, PATCH and DELETE with the query string, body, `Authorization`, `Content-Type`, `Idempotency-Key` and the client's `X-Forwarded-For`. Status, body and content type come back unchanged. `maxDuration` is 300 seconds because listicle hunts can take about 90.
+- `app/api/v1/[...path]/route.ts`: forwards GET, POST, PUT, PATCH and DELETE with the query string, body, `Authorization`, `Content-Type`, `Idempotency-Key` and the client's `X-Forwarded-For`. It also sets `x-sfa-client-ip` to the visitor IP and, when `SFA_PROXY_SECRET` is set, `x-sfa-proxy-secret`, so Outrank can trust that IP for the free lookup limit; values of those two headers sent by a browser are never forwarded. Status, body and content type come back unchanged. `maxDuration` is 300 seconds because listicle hunts can take about 90.
 - The homepage generates the key in the browser (`sfa_live_` + base64url of 32 random bytes) and keeps it in `localStorage` (`sfa_pending_key`, then `sfa_key` once active). Nothing is sent until Activate.
+- `app/r/[token]`: the public page of a result shared with `results_share` (AI visibility checks and listicle hunts), with its own link preview image. Not indexed.
+- `app/for/[agent]` and `app/vs/openseo`: pages for search. `app/launch-demo` is a 1200 by 675 stage that plays a 25-second session, for screen recording.
+- [`cli/`](cli): the `seoforagent` npm package (`npx seoforagent init`), no dependencies. The site mentions it only when `NEXT_PUBLIC_CLI_PUBLISHED` is `true`.
 - Tool results over MCP: `content` is the JSON envelope, with arrays over 25 items trimmed and a pointer to `results_get`; `structuredContent` is the full envelope.
 
 ## Environment variables
 
-None are secret. See [`.env.example`](.env.example).
+Only `SFA_PROXY_SECRET` is secret. See [`.env.example`](.env.example).
 
 | Name | Default | Purpose |
 |---|---|---|
 | `OUTRANK_API_BASE` | `https://www.outrank.so/api/agent/v1` | Backend every request is forwarded to |
 | `NEXT_PUBLIC_SITE_URL` | `https://seoforagent.com` | Public origin used in prompts, MCP URLs, sitemap and metadata |
 | `NEXT_PUBLIC_POSTHOG_KEY` | empty | Optional PostHog project key. Without it no analytics load |
+| `NEXT_PUBLIC_REWARDFUL_KEY` | empty | Optional Rewardful key. Without it no affiliate tracking loads |
+| `NEXT_PUBLIC_GITHUB_PUBLIC` | empty | `true` shows the GitHub link and the star count |
+| `NEXT_PUBLIC_CLI_PUBLISHED` | empty | `true` shows `npx seoforagent init` in the setup card and the docs |
+| `SFA_PROXY_SECRET` | empty | Server only. Sent to Outrank as `x-sfa-proxy-secret` so it trusts `x-sfa-client-ip` |
 
 ## Local development
 
