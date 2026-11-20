@@ -34,9 +34,9 @@ export const AGENT_PAGES: AgentPage[] = [
         cost: 'About $0.07: one seed keyword and three live result checks.',
       },
       {
-        prompt: 'Ask ChatGPT, Perplexity, Gemini and Claude who they recommend for "best invoicing app for freelancers" and tell me if we are named.',
-        tools: ['ai_visibility_check'],
-        cost: '$0.32: one prompt, four assistants.',
+        prompt: 'Ask ChatGPT, Perplexity, Gemini and Claude who they recommend for "best invoicing app for freelancers". If we are not named, tell me why and what to do.',
+        tools: ['ai_visibility_check', 'ai_visibility_diagnose'],
+        cost: '$0.62: one prompt on four assistants, then the diagnosis.',
       },
       {
         prompt: 'Check where we rank for our 10 main keywords and compare with the last check.',
@@ -110,9 +110,9 @@ export const AGENT_PAGES: AgentPage[] = [
     connectNote: 'The Claude app cannot set headers, so the key is part of the connector URL. Treat that URL like a password.',
     prompts: [
       {
-        prompt: 'Do ChatGPT, Perplexity, Gemini and Claude mention my brand when people ask for the best tools in my category? Check three questions.',
-        tools: ['ai_visibility_check'],
-        cost: '$0.96: three prompts, four assistants.',
+        prompt: 'Do ChatGPT, Perplexity, Gemini and Claude mention my brand when people ask for the best tools in my category? Check three questions, then tell me why I am left out and what to do.',
+        tools: ['ai_visibility_check', 'ai_visibility_diagnose'],
+        cost: '$1.26: three prompts on four assistants, then the diagnosis.',
       },
       {
         prompt: 'Build a keyword plan for my site: 30 keywords grouped by intent, with volume and difficulty.',

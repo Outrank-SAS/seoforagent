@@ -8,16 +8,18 @@ import { formatUsd } from '@/lib/format';
 import { pick, pickArray, pickBool, pickNumber, pickString, pickUsd } from '@/lib/pick';
 import { buttonSecondary } from '@/lib/styles';
 import { Spinner } from '../ui';
+import { AiVisibilityTab } from './AiVisibilityTab';
 import { BacklinksTab } from './BacklinksTab';
 import { useApiGet, useDashboard } from './context';
 import { TrackingCard } from './TrackingCard';
 import { Card, EmptyState, ErrorState, Notice, SkeletonRows, downloadCsv, relativeTime, shortDate } from './widgets';
 
 type Loose = Record<string, unknown>;
-type TabId = 'overview' | 'rankings' | 'listicles' | 'backlinks';
+type TabId = 'overview' | 'ai' | 'rankings' | 'listicles' | 'backlinks';
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'overview', label: 'Overview' },
+  { id: 'ai', label: 'AI visibility' },
   { id: 'rankings', label: 'Rankings' },
   { id: 'listicles', label: 'Listicles' },
   { id: 'backlinks', label: 'Backlinks' },
@@ -370,6 +372,7 @@ export const ProjectView = () => {
         {project.loading ? <SkeletonRows /> : null}
         {!project.loading && project.envelope && !project.envelope.ok ? <ErrorState envelope={project.envelope} onRetry={project.reload} what="this project" /> : null}
         {data && tab === 'overview' ? <OverviewTab projectId={projectId} project={data} /> : null}
+        {data && tab === 'ai' ? <AiVisibilityTab projectId={projectId} /> : null}
         {data && tab === 'rankings' ? <RankingsTab projectId={projectId} /> : null}
         {data && tab === 'listicles' ? <ListiclesTab projectId={projectId} /> : null}
         {data && tab === 'backlinks' ? <BacklinksTab projectId={projectId} /> : null}

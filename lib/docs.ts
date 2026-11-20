@@ -67,7 +67,7 @@ export const routeOf = (tool: ToolDefinition): string => {
 
 export const BILLING_POINTS = [
   'Every price is in US dollars. Plans include a monthly amount of usage; one-time credit is spent after it and does not reset.',
-  'A paid call is held at its upper estimate, then charged its actual cost. Data tools cost the provider price × 1.28, rounded up to $0.001 with a $0.001 minimum. AI checks and listicle tools have fixed prices.',
+  'A paid call is held at its upper estimate, then charged its actual cost. Data tools cost the provider price × 1.28, rounded up to $0.001 with a $0.001 minimum. AI checks, the AI visibility diagnosis and listicle tools have fixed prices.',
   'Every paid response carries cost.charged_usd, cost.included_left_usd and cost.credit_left_usd, plus a result_id you can re-read for free for 30 days with results_get.',
   'Every paid tool accepts dry_run (price only, free), max_cost_usd (refuse above this amount) and fresh (skip the free 24-hour repeat).',
   'Per-call and daily spend limits are set by the human in the dashboard. A call over a limit returns OVER_SPEND_LIMIT and is not charged.',
@@ -116,6 +116,10 @@ export const CURL_EXAMPLES: { title: string; code: string }[] = [
   {
     title: 'Ask four AI assistants about your brand',
     code: `curl -X POST ${PUBLIC_API_BASE}/sfa/ai/check \\\n  -H "Authorization: Bearer $SEOFORAGENT_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '{"prompts":["best ai video editor for youtube"],"brand":"Acme","max_cost_usd":0.5}'`,
+  },
+  {
+    title: 'Find out why the brand is left out, and what to do',
+    code: `curl -X POST ${PUBLIC_API_BASE}/sfa/ai/diagnose \\\n  -H "Authorization: Bearer $SEOFORAGENT_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '{"result_id":"'$RESULT_ID'","max_cost_usd":0.3}'`,
   },
   {
     title: 'Quote, then allocate backlink credit (after the human says yes)',

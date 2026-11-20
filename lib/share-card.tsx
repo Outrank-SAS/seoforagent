@@ -50,6 +50,26 @@ const AiCard = ({ result }: { result: SharedResult }) => {
   );
 };
 
+const DiagnosisCard = ({ result }: { result: SharedResult }) => {
+  const diagnosis = result.diagnosis!;
+  return (
+    <OgFrame>
+      <Label>{clip(`ai visibility diagnosis · ${sharedSubject(result)}`, 62)}</Label>
+      <div style={{ display: 'flex', flexDirection: 'column', marginTop: 14, fontSize: 86, fontWeight: 600, letterSpacing: -3.4, lineHeight: 1.04 }}>
+        <div style={{ display: 'flex' }}>
+          Left out of {diagnosis.score.missed} of {diagnosis.score.answers}
+        </div>
+        <div style={{ display: 'flex', color: OG_COLORS.soft }}>AI answers</div>
+      </div>
+      <div style={{ display: 'flex', gap: 16, marginTop: 'auto' }}>
+        <Chip title="Reasons found" value={String(diagnosis.reasons.length)} on={diagnosis.reasons.length > 0} />
+        <Chip title="Steps in the plan" value={String(diagnosis.actions.length)} on={diagnosis.actions.length > 0} />
+        <Chip title="Pages to get on" value={String(diagnosis.pages.length)} on={diagnosis.pages.length > 0} />
+      </div>
+    </OgFrame>
+  );
+};
+
 const ListiclesCard = ({ result }: { result: SharedResult }) => {
   const lists = result.listicles!;
   const cited = lists.pages.filter((page) => page.citedBy.length > 0).length;
@@ -75,6 +95,6 @@ const ListiclesCard = ({ result }: { result: SharedResult }) => {
 export const shareImage = async (token: string): Promise<ImageResponse> => {
   const [lookup, fonts] = await Promise.all([fetchShared(token), loadOgFonts()]);
   const result = lookup.status === 'ok' ? lookup.result : null;
-  const card = result?.ai ? <AiCard result={result} /> : result?.listicles ? <ListiclesCard result={result} /> : <HomeCard />;
+  const card = result?.ai ? <AiCard result={result} /> : result?.diagnosis ? <DiagnosisCard result={result} /> : result?.listicles ? <ListiclesCard result={result} /> : <HomeCard />;
   return new ImageResponse(card, { ...OG_SIZE, fonts });
 };

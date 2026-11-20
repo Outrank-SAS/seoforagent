@@ -169,12 +169,12 @@ export const TOOLS: ToolDefinition[] = [
     area: 'account',
     kind: 'write',
     description:
-      'Makes a stored result public at a share URL that anyone can open without a key, or takes that URL down again with shared: false. Use it when the human wants to show an AI visibility check or a listicle hunt to someone; use results_get to read a result yourself. Free. Only results of ai_visibility_check and listicles_find can be shared, and the public page shows the brand, prompts and domains in the result: ask the human before sharing.',
+      'Makes a stored result public at a share URL that anyone can open without a key, or takes that URL down again with shared: false. Use it when the human wants to show an AI visibility check, its diagnosis or a listicle hunt to someone; use results_get to read a result yourself. Free. Only results of ai_visibility_check, ai_visibility_diagnose and listicles_find can be shared, and the public page shows the brand, prompts and domains in the result: ask the human before sharing.',
     price: 'Free',
     method: 'POST',
     offMethod: { arg: 'shared', method: 'DELETE' },
     input: {
-      result_id: z.string().min(1).describe('The result_id of an ai_visibility_check or listicles_find response.'),
+      result_id: z.string().min(1).describe('The result_id of an ai_visibility_check, ai_visibility_diagnose or listicles_find response.'),
       shared: z.boolean().optional().describe('true (default) creates or returns the share URL. false removes it.'),
     },
     pathArgs: ['result_id', 'shared'],
@@ -544,7 +544,7 @@ export const TOOLS: ToolDefinition[] = [
     area: 'ai',
     kind: 'paid',
     description:
-      'Asks ChatGPT, Perplexity, Gemini and Claude up to 10 prompts and reports, per answer, whether the brand is mentioned or cited, its position, the competitors named and the sources cited. Use it to see how AI assistants talk about the brand; use listicles_find to get onto the pages they cite. $0.08 per prompt per assistant. Answers vary between runs: one check is a sample, not a verdict.',
+      'Asks ChatGPT, Perplexity, Gemini and Claude up to 10 prompts and reports, per answer, whether the brand is mentioned or cited, its position, the competitors named and the sources cited. Use it to see whether AI assistants name the brand; when it is left out, call ai_visibility_diagnose with the result_id to learn why and what to do. $0.08 per prompt per assistant. Answers vary between runs: one check is a sample, not a verdict.',
     price: '$0.08 per prompt per assistant',
     method: 'POST',
     input: {
@@ -562,6 +562,40 @@ export const TOOLS: ToolDefinition[] = [
     },
     pathArgs: [],
     path: () => '/sfa/ai/check',
+  },
+  {
+    name: 'ai_visibility_diagnose',
+    title: 'Why AI leaves you out, and the fix',
+    area: 'ai',
+    kind: 'paid',
+    description:
+      'Explains why AI assistants left the brand out of an ai_visibility_check and what to do about it. It reads the pages the assistants cited and says whether the brand is on them, names who is recommended instead, checks the site itself (robots.txt rules for AI crawlers, a homepage readable without JavaScript, Google rankings for the questions, domain authority), then returns ranked reasons with their evidence and a step-by-step plan: pages to publish, cited lists to get on, threads and review sites to join, links to build. Use it right after a check where the brand is missing; use ai_visibility_report to re-read the plan for free. $0.30 per diagnosis, whatever the size of the check, and free when the brand is named in every answer. It takes up to 2 minutes: wait instead of calling it again. Each "outrank" block in the plan is an optional paid shortcut: never buy one without the human yes.',
+    price: '$0.30 per diagnosis',
+    method: 'POST',
+    input: {
+      result_id: z
+        .string()
+        .min(1)
+        .optional()
+        .describe('result_id of the ai_visibility_check to explain. Defaults to the latest check of project_id.'),
+      project_id: z.string().min(1).optional().describe('Explain the latest check of this project. Send it when you have no result_id.'),
+      ...paidFields,
+    },
+    pathArgs: [],
+    path: () => '/sfa/ai/diagnose',
+  },
+  {
+    name: 'ai_visibility_report',
+    title: 'AI visibility report',
+    area: 'ai',
+    kind: 'read',
+    description:
+      'Returns the AI visibility of a project: the latest ai_visibility_check per assistant and per question, the mention rate of every check in the last 30 days (scheduled ones included, oldest first) and the latest diagnosis with its reasons and plan. Use it in weekly reviews and to answer "is it working"; use ai_visibility_check for a new measurement. Free. diagnosis.is_for_latest_check false means the newest check has not been diagnosed yet.',
+    price: 'Free',
+    method: 'GET',
+    input: { project_id: projectId },
+    pathArgs: ['project_id'],
+    path: (args) => `${project(args)}/ai-visibility`,
   },
   {
     name: 'listicles_find',

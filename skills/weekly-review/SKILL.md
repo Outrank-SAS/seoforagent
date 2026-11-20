@@ -15,8 +15,9 @@ description: Run a weekly SEO and AI visibility review for a website with SEOfor
 4. If Search Console is connected, call `gsc_performance` for the last 7 days against the 7 before, by query and by page (free). Note the biggest gains and drops.
 5. Call `backlinks_placements` and `backlinks_buying_get` (free): new live links by product (backlink or listicle), lost links (refunded in credits), what each product spent of its monthly budget, and credits left.
 6. Call `listicles_list` (free) for any pages still to pitch.
-7. Call `wallet_get` (free) and report what was spent this week.
-8. Write the review: what moved, why it probably moved, and exactly three actions for the week, each with its cost. Keep it under 250 words.
+7. Call `ai_visibility_report` (free): the share of AI answers that mention the brand in each check of the last 30 days, and the latest diagnosis. Report the trend, and which actions of that plan are still open. If the newest check has no diagnosis and the brand is left out, offer `ai_visibility_diagnose` ($0.30).
+8. Call `wallet_get` (free) and report what was spent this week.
+9. Write the review: what moved, why it probably moved, and exactly three actions for the week, each with its cost. Keep it under 250 words.
 
 ## Scheduling
 

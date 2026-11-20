@@ -12,16 +12,16 @@ const SESSION = [
     result: 'Mentioned in 0 of 4 answers. Most cited: freebeat.ai, cybernews.com, stork.ai',
   },
   {
+    tool: 'ai_visibility_diagnose',
+    args: 'why you are left out',
+    cents: 30,
+    result: 'None of the 34 cited pages name you. Plan: publish 3 answer pages, get on 5 cited lists.',
+  },
+  {
     tool: 'listicles_find',
     args: '"best ai music video generator"',
     cents: 50,
     result: '78 lists rank on Google or are cited by AI. 3 are worth paying to be on.',
-  },
-  {
-    tool: 'backlinks_suggest',
-    args: 'vs invideo.io, pictory.ai',
-    cents: 28,
-    result: '25 sites link to both and not to you. Outrank can place DR 40+ links from $64.',
   },
 ];
 
@@ -104,7 +104,7 @@ export const SessionDemo = () => {
           })}
         </ol>
         <p className={`border-t border-white/10 pt-5 text-white/80 ${reveal(step, LAST_STEP)}`}>
-          Here is the plan: get onto stork.ai and cybernews.com first, pitch drafts are ready. Spent $1.10, $7.90 of usage left this month.
+          Here is the plan: I write the three answer pages now, then we pitch stork.ai and cybernews.com, drafts are ready. Spent $1.12, $7.88 of usage left this month.
         </p>
       </div>
       <figcaption className="sr-only">Example session in Claude with SEOforAgent connected</figcaption>

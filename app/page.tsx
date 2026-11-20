@@ -27,8 +27,8 @@ const OUTCOMES = [
   },
   {
     title: 'Get cited by AI',
-    body: 'Your agent asks ChatGPT, Perplexity, Gemini and Claude what they recommend, then finds the lists they cite and drafts the pitch to get on them.',
-    tools: ['ai_visibility_check', 'listicles_find', 'listicles_get', 'listicles_pitch', 'backlinks_buying_set'],
+    body: 'Your agent asks ChatGPT, Perplexity, Gemini and Claude what they recommend, tells you why you are left out and what to do about it, then finds the lists they cite and drafts the pitch to get on them.',
+    tools: ['ai_visibility_check', 'ai_visibility_diagnose', 'listicles_find', 'listicles_get', 'listicles_pitch', 'backlinks_buying_set'],
   },
 ];
 

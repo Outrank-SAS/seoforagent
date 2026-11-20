@@ -5,7 +5,7 @@ import { CLIENT_IP_HEADER, PROXY_SECRET_HEADER, clientIp, setVisitorHeaders } fr
 import { cleanDomain, demoErrorKind, parseDemoResult } from '@/lib/demo';
 import { formatStars } from '@/lib/github';
 import { agentById } from '@/lib/setup';
-import { isShareToken, parseShared, safeHttpUrl, sharedHeadline } from '@/lib/shared';
+import { isShareToken, parseDiagnosis, parseShared, safeHttpUrl, sharedHeadline, sharedSubject } from '@/lib/shared';
 import { REWARDFUL_QUEUE, posthogInit } from '@/lib/snippets';
 import { TOOL_BY_NAME } from '@/lib/tools';
 
@@ -149,9 +149,125 @@ describe('shared results', () => {
     expect(sharedHeadline(result)).toBe('78 lists rank or get cited for these queries, 3 worth being on');
   });
 
+  it('parses a shared diagnosis', () => {
+    const result = parseShared({
+      ok: true,
+      data: {
+        tool: 'ai_visibility_diagnose',
+        title: 'Why AI assistants leave out Acme',
+        created_at: '2026-11-20T08:49:43Z',
+        domain: 'acme.com',
+        data: {
+          brand: 'Acme',
+          verdict: 'Acme is left out of 16 of 20 answers.',
+          score: { answers: 20, mentioned: 4, cited: 5, missed: 16, prompts: 5, engines: ['claude', 'chatgpt'] },
+          reasons: [
+            { id: 'not_on_cited_pages', severity: 'high', title: 'The pages the assistants read do not mention you', evidence: 'None of 34 pages mention Acme.' },
+            { id: 'other', severity: 'urgent', title: 'Something else', evidence: '' },
+          ],
+          actions: [
+            {
+              id: 'publish_answer_pages',
+              rank: 1,
+              title: 'Publish a page that answers each question',
+              why: 'Assistants cite pages.',
+              steps: ['Write one page per question.', 7, ''],
+              effort: '1 to 2 hours per page',
+              cost: 'Free if you write them',
+              expect: 'Days to weeks.',
+              outrank: { product: 'Outrank', what: 'Writes articles.', price: '$99 a month', why_relevant: 'Covers the variants.', limits: null, tool: null, url: 'https://www.outrank.so/?utm_source=seoforagent' },
+            },
+            { id: 'build_authority', rank: 2, title: 'Raise the authority of your site', why: '', steps: [], outrank: { product: 'Backlinks', what: 'Places links.', price: 'DR x 2', why_relevant: '', limits: 'No promise.', url: 'http://www.outrank.so/' } },
+            { id: 'track', rank: 3, title: 'Check again in 2 to 4 weeks', steps: ['Run the check again.'], outrank: null },
+          ],
+          who_wins: [{ name: 'Smash', domain: null, answers: 6, own_site_cited: 2 }],
+          cited_pages: { total: 129, outside_your_site: 125, third_party_read: 34, mention_you: 0 },
+          pages_to_get_on: [
+            { url: 'https://suresend.ca/alternatives', domain: 'suresend.ca', type: 'listicle', how: 'pitch', cited_in_answers: 2, engines: ['gemini', 'chatgpt'], names: ['Smash', 'Filemail'], title: 'WeTransfer Alternatives' },
+            { domain: 'nourl.com', type: 'forum', how: 'join' },
+          ],
+          prompts: [
+            {
+              prompt: 'best WeTransfer alternative',
+              mentioned_on: [],
+              missing_on: ['claude', 'perplexity'],
+              recommended: ['Smash'],
+              drafted: { rewarded: 'Large free limits.', page_title: 'Best WeTransfer Alternatives', page_type: 'best_list', page_type_label: 'a "best of" list', page_angle: 'Compare on limits.' },
+            },
+            { prompt: 'how to track opens', mentioned_on: ['claude'], missing_on: [], recommended: [], drafted: null },
+          ],
+          limits: ['Answers vary between runs.'],
+        },
+      },
+    })!;
+    const diagnosis = result.diagnosis!;
+    expect(result.tool).toBe('ai_visibility_diagnose');
+    expect(result.ai).toBeNull();
+    expect(sharedHeadline(result)).toBe('Left out of 16 of 20 AI answers');
+    expect(sharedSubject(result)).toBe('Acme');
+    expect(diagnosis.score.engines).toEqual(['chatgpt', 'claude']);
+    expect(diagnosis.reasons.map((reason) => reason.severity)).toEqual(['high', 'low']);
+    expect(diagnosis.actions.map((action) => action.id)).toEqual(['publish_answer_pages', 'build_authority', 'track']);
+    expect(diagnosis.actions[0].steps).toEqual(['Write one page per question.']);
+    expect(diagnosis.actions[0].outrank).toEqual({
+      product: 'Outrank',
+      what: 'Writes articles.',
+      price: '$99 a month',
+      whyRelevant: 'Covers the variants.',
+      limits: '',
+      url: 'https://www.outrank.so/?utm_source=seoforagent',
+    });
+    expect(diagnosis.actions[1].outrank?.url).toBeNull();
+    expect(diagnosis.actions[2].outrank).toBeNull();
+    expect(diagnosis.actions[0].tools).toEqual([]);
+    expect(diagnosis.whoWins).toEqual([{ name: 'Smash', domain: '', answers: 6, ownSiteCited: 2 }]);
+    expect(diagnosis.citedPages).toEqual({ outsideYourSite: 125, thirdPartyRead: 34, mentionYou: 0 });
+    expect(diagnosis.pages).toHaveLength(1);
+    expect(diagnosis.pages[0]).toMatchObject({ title: 'WeTransfer Alternatives', how: 'pitch', citedInAnswers: 2, engines: ['chatgpt', 'gemini'], names: ['Smash', 'Filemail'] });
+    expect(diagnosis.prompts[0].missingOn).toEqual(['perplexity', 'claude']);
+    expect(diagnosis.prompts[0].google).toBeNull();
+    expect(diagnosis.prompts[0].drafted?.pageTypeLabel).toBe('a "best of" list');
+    expect(diagnosis.prompts[1].drafted).toBeNull();
+    expect(diagnosis.limits).toEqual(['Answers vary between runs.']);
+  });
+
+  it('reads the dashboard diagnosis shape and survives missing fields', () => {
+    const diagnosis = parseDiagnosis({
+      brand: 'Acme',
+      score: { answers: 8, mentioned: 3 },
+      actions: [
+        {
+          id: 'get_on_cited_pages',
+          title: 'Get listed on the pages the assistants cite',
+          tools: [{ kind: 'tool', tool: 'listicles_find', args: { queries: ['best crm'] }, why: 'Save the lists', est_cost_usd: 1.5 }, { kind: 'tool' }],
+        },
+        { id: 'untitled' },
+      ],
+      pages_to_get_on: [{ url: 'https://a.com/best', untrusted_text: { title: '<b>Best</b> tools' }, how: 'PROFILE' }],
+      prompts: [
+        { prompt: 'best crm', google_top_20: true, google_position: 10 },
+        { prompt: 'crm for agencies', google_top_20: false, google_position: null },
+      ],
+    });
+    expect(diagnosis.score).toMatchObject({ answers: 8, mentioned: 3, missed: 5, cited: 0, prompts: 2, engines: [] });
+    expect(diagnosis.actions).toHaveLength(1);
+    expect(diagnosis.actions[0].tools).toEqual([{ tool: 'listicles_find', why: 'Save the lists', estCostUsd: 1.5 }]);
+    expect(diagnosis.pages[0]).toMatchObject({ title: '<b>Best</b> tools', how: 'profile', citedInAnswers: 0 });
+    expect(diagnosis.prompts.map((item) => item.google)).toEqual([
+      { top20: true, position: 10 },
+      { top20: false, position: undefined },
+    ]);
+    expect(diagnosis.citedPages).toBeNull();
+
+    const empty = parseDiagnosis(null);
+    expect(empty).toMatchObject({ brand: '', verdict: '', reasons: [], actions: [], whoWins: [], pages: [], prompts: [], limits: [], citedPages: null });
+    expect(empty.score).toEqual({ answers: 0, mentioned: 0, cited: 0, missed: 0, prompts: 0, engines: [] });
+  });
+
   it('refuses other tools, bad tokens and unsafe links', () => {
     expect(parseShared({ ok: true, data: { tool: 'keywords_research', data: {} } })).toBeNull();
     expect(parseShared({ ok: true, data: { tool: 'listicles_find' } })).toBeNull();
+    expect(parseShared({ ok: true, data: { tool: 'ai_visibility_diagnose' } })).toBeNull();
     expect(isShareToken('abcDEF123_-')).toBe(true);
     expect(isShareToken('../etc')).toBe(false);
     expect(isShareToken('abc')).toBe(false);
