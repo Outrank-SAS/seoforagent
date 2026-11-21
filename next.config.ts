@@ -28,6 +28,10 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        source: '/review/:path*',
+        headers: [{ key: 'X-Robots-Tag', value: 'noindex' }],
+      },
+      {
         source: '/mcp/:path*',
         headers: [
           { key: 'Referrer-Policy', value: 'no-referrer' },

@@ -38,8 +38,8 @@ export const DashboardShell = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const stored = getActiveKey();
-    queueMicrotask(() => setApiKey(stored));
-  }, []);
+    queueMicrotask(() => setApiKey((current) => (current && current === stored ? current : stored)));
+  }, [pathname]);
 
   const fetchWhoami = useCallback(async (key: string) => {
     const result = await api('/sfa/whoami', { key });
