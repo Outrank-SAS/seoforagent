@@ -23,7 +23,7 @@
         "shortDescription": "SEO data and AI visibility",
         "longDescription": "SEOforAgent brings real SEO data into your chats for the websites on your SEOforAgent account. Research keywords with search volume and difficulty, read live Google results, size a domain or a competitor, check where your pages rank, and see which sites link to your competitors and not to you.\n\nIt also shows how AI assistants talk about your brand: ask the questions your buyers ask, see whether your brand is named and which pages are cited, then get a diagnosis of why it is left out, with the evidence and a step-by-step plan. Find the list articles those answers cite and draft a pitch to their authors.\n\nFor people with a SEOforAgent account. You sign in with that account and the plugin gets its own key, which you can revoke at any time from your dashboard. Each result shows the usage it took from your account.",
         "developerName": "Outrank SAS",
-        "category": "Business",
+        "category": "Productivity",
         "capabilities": [
           "Research keywords",
           "Track Google rankings",
