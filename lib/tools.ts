@@ -71,16 +71,16 @@ const domainOrProject = z
   .describe('A bare domain such as "example.com". Defaults to the project domain when project_id is set.');
 
 const paidFields = {
-  dry_run: z.boolean().optional().describe('Return the price and what the call would do, without running or charging it. Free.'),
+  dry_run: z.boolean().optional().describe('Return the cost of the call without running it. Nothing is charged.'),
   max_cost_usd: z
     .number()
     .positive()
     .optional()
-    .describe('Refuse the call, at no charge, if it would cost more than this many US dollars.'),
+    .describe('Refuse the call, with nothing charged, if it would cost more than this many US dollars.'),
   fresh: z
     .boolean()
     .optional()
-    .describe('Fetch new data instead of the free 24-hour repeat. Charged again. Leave unset unless the human asks for fresh data.'),
+    .describe('Fetch new data instead of reusing the same request from the last 24 hours, which is free. A fresh call is charged again.'),
 };
 
 const DATA_PRICE_NOTE = 'provider cost × 1.28, never above the estimate';
