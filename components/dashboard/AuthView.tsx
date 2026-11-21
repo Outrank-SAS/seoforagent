@@ -4,13 +4,28 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { api, dataOf, errorMessage } from '@/lib/api';
-import { getPendingKey, isSfaKey, promotePendingKey, setActiveKey } from '@/lib/keys';
+import { getPendingKey, isSfaKey, promotePendingKey, readStorage, removeStorage, setActiveKey } from '@/lib/keys';
+import { OAUTH_RETURN_MAX_AGE_MS, OAUTH_RETURN_STORAGE } from '@/lib/config';
 import { pickBool, pickString } from '@/lib/pick';
 import { buttonDark, buttonSecondary } from '@/lib/styles';
 import { Lockup } from '../Lockup';
 import { Spinner } from '../ui';
 
 type State = { name: 'working' } | { name: 'signed_in' } | { name: 'confirmed'; promoted: boolean } | { name: 'error'; message: string };
+
+const pendingOAuthReturn = (): string | null => {
+  const raw = readStorage(OAUTH_RETURN_STORAGE);
+  removeStorage(OAUTH_RETURN_STORAGE);
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as { url?: string; at?: number };
+    const url = new URL(parsed.url ?? '', window.location.origin);
+    const fresh = Date.now() - Number(parsed.at) < OAUTH_RETURN_MAX_AGE_MS;
+    return fresh && url.origin === window.location.origin && url.pathname === '/oauth/authorize' ? url.toString() : null;
+  } catch {
+    return null;
+  }
+};
 
 export const AuthView = () => {
   const router = useRouter();
@@ -38,6 +53,11 @@ export const AuthView = () => {
       if (key && purpose !== 'confirm_activation') {
         setActiveKey(key);
         setState({ name: 'signed_in' });
+        const oauthReturn = pendingOAuthReturn();
+        if (oauthReturn) {
+          window.location.assign(oauthReturn);
+          return;
+        }
         router.replace('/app');
         return;
       }

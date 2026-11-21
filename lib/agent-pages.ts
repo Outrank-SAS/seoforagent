@@ -107,7 +107,7 @@ export const AGENT_PAGES: AgentPage[] = [
     description:
       'Add SEOforAgent to the Claude app as a custom connector. Claude runs keyword research, AI visibility checks and weekly SEO reviews in any chat.',
     lede: 'The Claude app takes custom connectors. Add SEOforAgent as one and Claude can run keyword research, AI visibility checks and a weekly review of your site in any chat, without a terminal.',
-    connectNote: 'The Claude app cannot set headers, so the key is part of the connector URL. Treat that URL like a password.',
+    connectNote: 'Paste one URL, then sign in to SEOforAgent when Claude asks. Claude gets its own key, which you can revoke from the dashboard.',
     prompts: [
       {
         prompt: 'Do ChatGPT, Perplexity, Gemini and Claude mention my brand when people ask for the best tools in my category? Check three questions, then tell me why I am left out and what to do.',
@@ -134,7 +134,7 @@ export const AGENT_PAGES: AgentPage[] = [
     description:
       'Add SEOforAgent to ChatGPT as a connector in developer mode. ChatGPT reads real search data and sees how AI assistants talk about your brand.',
     lede: 'ChatGPT can call outside tools through connectors in developer mode. Add SEOforAgent and it reads real search data instead of guessing, and can check how it and three other assistants talk about your brand.',
-    connectNote: 'ChatGPT cannot set headers, so the key is part of the connector URL. Treat that URL like a password.',
+    connectNote: 'Paste one URL, then sign in to SEOforAgent when ChatGPT asks. ChatGPT gets its own key, which you can revoke from the dashboard.',
     prompts: [
       {
         prompt: 'How much traffic does my main competitor get from Google, and which keywords bring it?',

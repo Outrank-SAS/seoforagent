@@ -21,3 +21,5 @@ export const KEY_PREFIX = 'sfa_live_';
 export const KEY_PATTERN = /^sfa_live_[A-Za-z0-9_-]{40,60}$/;
 export const PENDING_KEY_STORAGE = 'sfa_pending_key';
 export const ACTIVE_KEY_STORAGE = 'sfa_key';
+export const OAUTH_RETURN_STORAGE = 'sfa_oauth_return';
+export const OAUTH_RETURN_MAX_AGE_MS = 30 * 60 * 1000;

@@ -4,7 +4,9 @@ import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { callBackend } from './backend';
 import { SITE_URL } from './config';
 import { envelopeText } from './format';
-import { TOOLS, buildRequest, toolAnnotations, type ToolArgs, type ToolDefinition } from './tools';
+import { authChallenge, CORS_HEADERS, isOAuthToken, type McpSurface, tokenIsRejected } from './oauth';
+import { isListed, LISTED_INSTRUCTIONS, listedAnnotations, sanitizeListedEnvelope, surfaceTools } from './surfaces';
+import { buildRequest, toolAnnotations, type ToolArgs, type ToolDefinition } from './tools';
 
 export const MCP_SERVER_NAME = 'seoforagent';
 export const MCP_SERVER_VERSION = '0.1.0';
@@ -57,7 +59,16 @@ const upstreamFailure = (status: number, text: string): Record<string, unknown> 
 export const runTool = async (
   tool: ToolDefinition,
   args: ToolArgs,
-  context: { key: string | null; forwardedFor?: string; signal?: AbortSignal },
+  context: { key: string | null; forwardedFor?: string; signal?: AbortSignal; surface?: McpSurface },
+): Promise<Record<string, unknown>> => {
+  const envelope = await callTool(tool, args, context);
+  return context.surface && isListed(context.surface) ? sanitizeListedEnvelope(envelope) : envelope;
+};
+
+const callTool = async (
+  tool: ToolDefinition,
+  args: ToolArgs,
+  context: { key: string | null; forwardedFor?: string; signal?: AbortSignal; surface?: McpSurface },
 ): Promise<Record<string, unknown>> => {
   if (!context.key && !tool.public) return NO_KEY_ENVELOPE;
   let request;
@@ -80,6 +91,7 @@ export const runTool = async (
       idempotencyKey: request.idempotencyKey,
       forwardedFor: context.forwardedFor,
       signal: context.signal,
+      surface: context.surface,
     });
     try {
       const parsed = JSON.parse(response.text);
@@ -100,22 +112,24 @@ export const runTool = async (
   }
 };
 
-export const createMcpServer = (context: { key: string | null; forwardedFor?: string }): McpServer => {
+export const createMcpServer = (context: { key: string | null; forwardedFor?: string; surface?: McpSurface }): McpServer => {
+  const surface = context.surface ?? 'direct';
+  const listed = isListed(surface);
   const server = new McpServer(
     { name: MCP_SERVER_NAME, title: 'SEOforAgent', version: MCP_SERVER_VERSION, websiteUrl: SITE_URL },
-    { instructions: MCP_INSTRUCTIONS },
+    { instructions: listed ? LISTED_INSTRUCTIONS : MCP_INSTRUCTIONS },
   );
-  for (const tool of TOOLS) {
+  for (const tool of surfaceTools(surface)) {
     server.registerTool(
       tool.name,
       {
         title: tool.title,
         description: tool.description,
         inputSchema: tool.input,
-        annotations: toolAnnotations(tool),
+        annotations: listed ? listedAnnotations(tool) : toolAnnotations(tool),
       },
       async (args: ToolArgs, extra) =>
-        toResult(await runTool(tool, args ?? {}, { key: context.key, forwardedFor: context.forwardedFor, signal: extra.signal })),
+        toResult(await runTool(tool, args ?? {}, { key: context.key, forwardedFor: context.forwardedFor, signal: extra.signal, surface })),
     );
   }
   return server;
@@ -127,9 +141,32 @@ const methodNotAllowed = (): Response =>
     { status: 405, headers: { 'Content-Type': 'application/json', Allow: 'POST' } },
   );
 
-export const handleMcpRequest = async (request: Request, key: string | null, forwardedFor?: string): Promise<Response> => {
+const unauthorized = (surface: McpSurface, error?: 'invalid_token'): Response =>
+  new Response(
+    JSON.stringify({
+      jsonrpc: '2.0',
+      error: {
+        code: -32001,
+        message: error ? 'The access token is expired or revoked. Connect SEOforAgent again.' : 'Sign in to SEOforAgent to use these tools.',
+      },
+      id: null,
+    }),
+    {
+    status: 401,
+      headers: { ...CORS_HEADERS, 'Content-Type': 'application/json', 'WWW-Authenticate': authChallenge(surface, error) },
+    },
+  );
+
+export const handleMcpRequest = async (
+  request: Request,
+  key: string | null,
+  forwardedFor?: string,
+  surface: McpSurface = 'direct',
+): Promise<Response> => {
   if (request.method !== 'POST') return methodNotAllowed();
-  const server = createMcpServer({ key, forwardedFor });
+  if (!key) return unauthorized(surface);
+  if (isOAuthToken(key) && (await tokenIsRejected(key, forwardedFor))) return unauthorized(surface, 'invalid_token');
+  const server = createMcpServer({ key, forwardedFor, surface });
   const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
   await server.connect(transport);
   try {

@@ -1,5 +1,6 @@
 import { clientIp } from '@/lib/backend';
 import { handleMcpRequest, keyFromAuthorization, mcpMethodNotAllowed } from '@/lib/mcp';
+import { corsPreflight } from '@/lib/oauth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -10,3 +11,4 @@ export const POST = (request: Request): Promise<Response> =>
 
 export const GET = (): Response => mcpMethodNotAllowed();
 export const DELETE = (): Response => mcpMethodNotAllowed();
+export const OPTIONS = (): Response => corsPreflight();

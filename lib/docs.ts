@@ -141,7 +141,7 @@ export const docsMarkdown = (): string => {
   parts.push(`1. Open ${SITE_URL}. An API key (\`sfa_live_...\`) is generated in your browser.`);
   parts.push('2. Click Activate, choose a plan or buy credit once, and pay on Stripe. The key works as soon as the payment is confirmed.');
   parts.push('3. Connect your agent with one of the snippets below, then paste the setup prompt.', '');
-  parts.push(`MCP endpoint (Streamable HTTP, stateless): \`${MCP_URL}\` with \`Authorization: Bearer ${KEY_PLACEHOLDER}\`. Apps that cannot set headers use \`${MCP_URL}/${KEY_PLACEHOLDER}\`.`, '');
+  parts.push(`MCP endpoint (Streamable HTTP, stateless): \`${MCP_URL}\` with \`Authorization: Bearer ${KEY_PLACEHOLDER}\`. Apps that support OAuth, such as ChatGPT and the Claude app, connect to \`${MCP_URL}\` without a key and ask you to sign in. Other apps that cannot set headers use \`${MCP_URL}/${KEY_PLACEHOLDER}\`.`, '');
   for (const agent of AGENTS) {
     parts.push(`### ${agent.label}`, '', agent.intro, '', `\`\`\`${agent.language === 'shell' ? 'sh' : agent.language}`, agent.snippet(KEY_PLACEHOLDER), '```', '');
     agent.steps.forEach((step, index) => parts.push(`${index + 1}. ${step}`));

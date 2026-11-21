@@ -28,8 +28,8 @@ const GROUPS: { title: string; links: FooterLink[] }[] = [
     title: 'Company',
     links: [
       { href: OUTRANK_URL, label: 'Outrank', external: true },
-      { href: `${OUTRANK_URL}/terms-of-use`, label: 'Terms', external: true },
-      { href: `${OUTRANK_URL}/privacy-policy`, label: 'Privacy', external: true },
+      { href: '/terms', label: 'Terms of Service' },
+      { href: '/privacy', label: 'Privacy Policy' },
       { href: `mailto:${SUPPORT_EMAIL}`, label: 'Support', external: true },
     ],
   },
