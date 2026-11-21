@@ -1,0 +1,107 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "seoforagent",
+  "version": "1.0.0",
+  "description": "SEO data, rank tracking, AI visibility checks and diagnoses, and list article research for your websites.",
+  "author": {
+    "name": "Outrank SAS",
+    "email": "support@outrank.so",
+    "url": "https://seoforagent.com"
+  },
+  "homepage": "https://seoforagent.com",
+  "keywords": [
+    "seo",
+    "keywords",
+    "rank tracking",
+    "ai visibility",
+    "search console"
+  ],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "SEOforAgent",
+        "shortDescription": "SEO data and AI visibility",
+        "longDescription": "SEOforAgent brings real SEO data into your chats for the websites on your SEOforAgent account. Research keywords with search volume and difficulty, read live Google results, size a domain or a competitor, check where your pages rank, and see which sites link to your competitors and not to you.\n\nIt also shows how AI assistants talk about your brand: ask the questions your buyers ask, see whether your brand is named and which pages are cited, then get a diagnosis of why it is left out, with the evidence and a step-by-step plan. Find the list articles those answers cite and draft a pitch to their authors.\n\nFor people with a SEOforAgent account. You sign in with that account and the plugin gets its own key, which you can revoke at any time from your dashboard. Each result shows the usage it took from your account.",
+        "developerName": "Outrank SAS",
+        "category": "Business",
+        "capabilities": [
+          "Research keywords",
+          "Track Google rankings",
+          "Check AI visibility",
+          "Diagnose AI visibility",
+          "Find list articles"
+        ],
+        "websiteURL": "https://seoforagent.com",
+        "supportURL": "https://seoforagent.com/docs",
+        "privacyPolicyURL": "https://seoforagent.com/privacy",
+        "termsOfServiceURL": "https://seoforagent.com/terms",
+        "defaultPrompt": [
+          "Do AI assistants mention my brand for my main buying question?",
+          "Why is my brand left out of AI answers, and what should I do?",
+          "Find keyword ideas for my site with volume and difficulty."
+        ],
+        "composerIcon": "./assets/logo.png",
+        "logo": "./assets/logo.png"
+      },
+      "review": {
+        "commerce": false,
+        "commerce_description": "This plugin does not sell products, start subscriptions or process payments. Paid tools use usage or credit the account already has, bought on seoforagent.com, and each result reports the amount used.",
+        "demo_recording_url": "https://seoforagent.com/review/chatgpt-demo.mp4",
+        "test_cases": {
+          "positive": [
+            {
+              "description": "Check whether AI assistants mention the brand",
+              "prompt": "Do ChatGPT, Perplexity, Gemini and Claude mention SEOforAgent when someone asks \"best seo tool for ai agents\"? Use my seoforagent.com project.",
+              "tools_triggered": "projects_list, ai_visibility_check",
+              "expected_behavior": "Runs one check on the four assistants for the seoforagent.com project and reports, per assistant, whether SEOforAgent is mentioned or cited and which brands and pages are named instead. On Nov 21, 2026 it was mentioned in 0 of 4 answers; answers vary between runs. The reply reports the cost, about $0.32 of account credit."
+            },
+            {
+              "description": "Explain why the brand is left out and what to do",
+              "prompt": "Why is SEOforAgent left out of AI answers for \"best seo tool for ai agents\", and what should I do about it?",
+              "tools_triggered": "ai_visibility_report, ai_visibility_diagnose (and ai_visibility_check first if no recent check exists)",
+              "expected_behavior": "Runs a diagnosis of the latest check and explains the reasons with their numbers (for example none of the third-party pages the assistants read mention SEOforAgent, the site ranks outside the Google top 20 and its domain rating is far below the recommended brands), then gives ranked actions with steps. It can take up to 2 minutes and uses about $0.30 of credit."
+            },
+            {
+              "description": "Keyword research",
+              "prompt": "Find 10 keyword ideas around \"seo mcp server\" with search volume and difficulty, and tell me which three my site should target first.",
+              "tools_triggered": "keywords_research or keywords_metrics",
+              "expected_behavior": "Lists keywords with monthly US search volume and difficulty and recommends three. Volumes for this niche are small (tens to a few hundred searches). Uses a few cents of credit."
+            },
+            {
+              "description": "Check Google rankings",
+              "prompt": "Where does seoforagent.com rank on Google for \"seo mcp server\" and \"seo tool for ai agents\"?",
+              "tools_triggered": "rank_check",
+              "expected_behavior": "Reports the position of seoforagent.com in the Google top 100 for each keyword, or that it is not in the top 100, and saves the result so rank_history can show it later. Uses a few cents of credit."
+            },
+            {
+              "description": "Find link opportunities from a competitor",
+              "prompt": "Which sites link to openseo.so but not to seoforagent.com, and how could I earn a link from them?",
+              "tools_triggered": "backlinks_suggest or backlinks_gap",
+              "expected_behavior": "Lists domains that link to openseo.so and not to seoforagent.com, with how to earn a link from each (directories, resource pages, outreach). It does not buy anything. Uses about $0.04 to $0.29 of credit."
+            }
+          ],
+          "negative": [
+            {
+              "description": "Request to buy links, which this plugin cannot do",
+              "prompt": "Buy two backlinks for seoforagent.com from DR 40 sites.",
+              "expected_behavior": "No purchase happens: the plugin has no tool that buys links or placements. ChatGPT says so and can offer research instead."
+            },
+            {
+              "description": "General knowledge question",
+              "prompt": "What is the capital of Australia?",
+              "expected_behavior": "ChatGPT answers without using the plugin."
+            },
+            {
+              "description": "Everyday request unrelated to SEO",
+              "prompt": "Give me a dinner recipe with chicken and rice.",
+              "expected_behavior": "ChatGPT gives a recipe without using the plugin."
+            }
+          ]
+        }
+      },
+      "publication": {
+        "release_notes": "Initial release: keyword and Google data, rank tracking, AI visibility checks and diagnoses, and list article research."
+      }
+    }
+  }
+}
