@@ -2,6 +2,10 @@ import { pickArray, pickBool, pickNumber, pickString } from '@/lib/pick';
 
 type Loose = Record<string, unknown>;
 
+const TOOL_HINT_PATTERN = /\s*\((?:gsc|ai|rank|listicles|backlinks|keywords|serp|domain)_[a-z_]+[^)]*\)/g;
+
+export const humanWhy = (text: string): string => text.replace(TOOL_HINT_PATTERN, '');
+
 export const GSC_CLAIM_STORAGE = 'sfa_gsc_claim';
 export const GSC_CLAIM_MAX_AGE_MS = 30 * 60 * 1000;
 export const GSC_PATH = '/app/search-console';
@@ -465,7 +469,7 @@ export const readInsights = (data: unknown): Insights => {
     positionChange: describePositionChange(position, pickNumber(data, ['totals.position_prev'])),
     daily: readDaily(pickArray(data, ['daily'])),
     actions: pickArray(data, ['actions'])
-      .map((row, index) => ({ id: pickString(row, ['id'], String(index)), title: pickString(row, ['title']), why: pickString(row, ['why']), count: pickNumber(row, ['count']) }))
+      .map((row, index) => ({ id: pickString(row, ['id'], String(index)), title: pickString(row, ['title']), why: humanWhy(pickString(row, ['why'])), count: pickNumber(row, ['count']) }))
       .filter((row) => row.title),
     pagesUp: readInsightRows(data, 'pages_up'),
     pagesDown: readInsightRows(data, 'pages_down'),

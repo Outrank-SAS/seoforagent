@@ -205,7 +205,7 @@ const SitesTable = ({ overview, onExport }: { overview: Overview; onExport: () =
     {overview.rows.length === 0 ? (
       <EmptyState title="No site to show yet. Add a site in Google Search Console, or connect the Google account that owns it." />
     ) : (
-      <div className="overflow-x-auto">
+      <div className="relative overflow-x-auto">
         <table className="w-full min-w-[900px] border-collapse text-left text-sm">
           <caption className="sr-only">Search Console sites sorted by clicks, last {overview.days} days compared with the {overview.days} days before</caption>
           <thead>
@@ -347,7 +347,7 @@ const InsightTable = ({ title, caption, rows, columns, empty, minWidth = 'min-w-
         <p className="text-sm text-muted">{empty}</p>
       ) : (
         <>
-          <div className="overflow-x-auto">
+          <div className="relative overflow-x-auto">
             <table className={`w-full ${minWidth} border-collapse text-left text-sm`}>
               <caption className="sr-only">{caption}</caption>
               <thead>

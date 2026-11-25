@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  humanWhy,
   GSC_CLAIM_MAX_AGE_MS,
   agentPrompts,
   bestSiteForProject,
@@ -223,5 +224,15 @@ describe('reading the contract', () => {
     expect(full.clicksChange).toMatchObject({ label: '-50%', tone: 'down' });
     expect(full.positionChange).toMatchObject({ tone: 'up' });
     expect(full.strikingDistance).toHaveLength(1);
+  });
+});
+
+describe('humanWhy', () => {
+  it('drops the tool hints meant for agents', () => {
+    expect(humanWhy('For each page, compare its queries and positions over both periods (gsc_performance with the page filter and compare), then check.')).toBe(
+      'For each page, compare its queries and positions over both periods, then check.',
+    );
+    expect(humanWhy('Check whether it is still indexed (gsc_inspect_url).')).toBe('Check whether it is still indexed.');
+    expect(humanWhy('No hint here (really).')).toBe('No hint here (really).');
   });
 });
