@@ -3,7 +3,7 @@ import { chmodSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync
 import { homedir } from 'node:os';
 import { delimiter, dirname, isAbsolute, join } from 'node:path';
 
-export const VERSION = '0.2.0';
+export const VERSION = '0.2.1';
 export const DEFAULT_SITE = 'https://seoforagent.com';
 export const KEY_PREFIX = 'sfa_live_';
 export const KEY_PATTERN = /^sfa_live_[A-Za-z0-9_-]{40,60}$/;

@@ -143,7 +143,6 @@ const KEY = 'sfa_live_' + 'a'.repeat(43);
 describe('cli version', () => {
   it('matches the package version', () => {
     expect(VERSION).toBe(cliPackage.version);
-    expect(VERSION).toBe('0.2.0');
   });
 });
 
