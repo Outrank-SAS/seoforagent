@@ -16,7 +16,7 @@ Use `dry_run: true` on any paid call you are unsure about. Keep a running total 
    - Note the plan, the included usage left and the projects that already exist.
 2. Ask the human for their website if you do not know it. If a project for that domain already exists, call `projects_get` and skip to step 5.
 3. Ask, in one message: what the site sells, who it is for, and up to three competitors they know. Then call `projects_create` with `domain`, `description`, `audiences` and `competitors`.
-4. Call `gsc_connect` for the project. If it returns a Google link, show it to the human and ask them to approve it. Do not wait on it: continue, and use `gsc_performance` later once they say it is done.
+4. Call `gsc_sites` (free). If Search Console is not connected, call `gsc_connect` and show the human the link: one approval on Google covers every site of their Google account, and they finish on seoforagent.com signed in to their account. Do not wait on it: continue, and once they say it is done call `gsc_overview` (free) for their real clicks and impressions.
 5. Pick 5 to 10 keywords the site should rank for, from its pages and the human's answers. Confirm the list with the human, then call `rank_check` with `max_cost_usd: 0.30` (up to $0.028 per keyword).
 6. If Search Console is connected, call `gsc_performance` with `dimensions: ["query"]` and `months: 3` (free) and note queries in positions 5 to 20.
 7. Finish with exactly three next steps, each with what it does and what it would cost, for example:

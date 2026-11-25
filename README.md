@@ -58,7 +58,7 @@ These apps cannot set headers, so the key goes in the URL: `https://seoforagent.
 |---|---|
 | Account | `whoami`, `wallet_get`, `pricing_get`, `account_link`, `results_get`, `results_share` |
 | Projects | `projects_list`, `projects_create`, `projects_get`, `projects_update` |
-| Search Console | `gsc_connect`, `gsc_performance` |
+| Search Console | `gsc_connect`, `gsc_sites`, `gsc_overview`, `gsc_insights`, `gsc_performance`, `gsc_inspect_url` |
 | Keywords and search results | `keywords_research`, `keywords_metrics`, `serp_results`, `serp_competitors` |
 | Domains | `domain_overview`, `domain_keywords` |
 | Rank tracking | `rank_check`, `rank_history` |
@@ -71,7 +71,7 @@ All tools are defined in one registry, [`lib/tools.ts`](lib/tools.ts): name, des
 
 ## Skills
 
-In [`skills/`](skills), each a Markdown workflow that states its expected spend and stops to ask before going over it: `seo-setup`, `keyword-plan`, `ai-visibility-audit`, `listicle-hunt`, `link-building`, `weekly-review`. The plugin in [`plugin/`](plugin) links to them.
+In [`skills/`](skills), each a Markdown workflow that states its expected spend and stops to ask before going over it: `seo-setup`, `search-console`, `keyword-plan`, `ai-visibility-audit`, `listicle-hunt`, `link-building`, `weekly-review`. The plugin in [`plugin/`](plugin) links to them.
 
 ## How it works
 

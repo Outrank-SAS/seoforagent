@@ -1,7 +1,7 @@
 {
   "name": "seoforagent",
-  "version": "0.1.0",
-  "description": "Set up SEOforAgent, the SEO tool for AI agents: create an API key and connect Claude Code, Codex or Cursor.",
+  "version": "0.2.0",
+  "description": "SEOforAgent, the SEO tool for AI agents: create an API key, connect Claude Code, Codex or Cursor, and read Google Search Console data and every SEOforAgent tool from the terminal.",
   "license": "MIT",
   "type": "module",
   "bin": {
@@ -27,6 +27,8 @@
     "ai-agents",
     "claude",
     "codex",
-    "cursor"
+    "cursor",
+    "google-search-console",
+    "cli"
   ]
 }

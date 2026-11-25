@@ -12,8 +12,9 @@ export const MCP_SERVER_NAME = 'seoforagent';
 export const MCP_SERVER_VERSION = '0.1.0';
 
 export const MCP_INSTRUCTIONS = [
-  'SEOforAgent gives you SEO data, AI visibility checks, listicle hunting and link buying (backlinks and listicle placements), priced in US dollars.',
+  'SEOforAgent gives you the real Google Search Console data of every site the human owns, SEO data, AI visibility checks, listicle hunting and link buying (backlinks and listicle placements), priced in US dollars.',
   '- Call whoami first. If the key is not active or has no plan, show the human the link it returns and stop until they say it is done.',
+  '- Start SEO work from Search Console, which is free: gsc_overview for every site, gsc_insights for what moved and what to do on one site, gsc_performance for any custom report, gsc_inspect_url for indexing. If it is not connected, offer gsc_connect first and give the human the link.',
   '- Every paid response reports cost.charged_usd and the balances left. Use dry_run: true to see a price first and max_cost_usd to cap a call. Ask the human before any single call over $2.',
   '- The same call within 24 hours is free. Pass fresh: true only when the human needs new data.',
   '- Long lists are trimmed in the text. Read every row with results_get and the result_id, free for 30 days.',

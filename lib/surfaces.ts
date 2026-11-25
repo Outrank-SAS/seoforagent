@@ -27,9 +27,17 @@ export const LISTED_DESCRIPTIONS: Record<string, string> = {
   projects_update:
     'Changes the name, description, audiences, competitors or market of a project. Lists sent replace the stored lists. Free.',
   gsc_connect:
-    'Starts the Google Search Console connection for a project and returns the Google consent link the account owner opens, or the property already connected. Free.',
+    'Starts the Google Search Console connection for the whole account and returns the Google link the account owner opens. One approval covers every Search Console site of that Google account. The owner finishes on seoforagent.com. Free.',
+  gsc_sites:
+    'Returns whether Google Search Console is connected, the connected Google accounts and every site they can read, with the matching project. Free.',
+  gsc_overview:
+    'Returns clicks, impressions, click rate and average position for every connected Search Console site for the last 7, 28 or 90 days against the period before, with a daily series. Free.',
+  gsc_insights:
+    'Compares one site with the previous period in Search Console and returns ranked actions with their numbers: pages and queries gaining or losing clicks, queries ranking 8 to 20, results with a low click rate for their position, and new and lost queries. Free.',
   gsc_performance:
-    'Returns clicks, impressions, CTR and average position from Google Search Console by query, page, country, device or date. Needs Search Console connected for the project. The last two or three days are not final. Free.',
+    'Returns clicks, impressions, click rate and average position from Google Search Console for one site by query, page, country, device, date or search appearance, with filters and an optional comparison with the previous period. The last two or three days are not final. Free.',
+  gsc_inspect_url:
+    'Returns what Google Search Console knows about one page: whether it is indexed, coverage state, last crawl, robots.txt and fetch state, the canonical Google chose, mobile usability and rich results. Free.',
   keywords_research: `Finds keyword ideas from 1 to 5 seed keywords, with search volume, difficulty, intent and CPC. ${PAID_NOTE}`,
   keywords_metrics: `Returns search volume, difficulty, intent and CPC for up to 500 known keywords. Very long-tail keywords often have no volume data. ${PAID_NOTE}`,
   serp_results: `Returns live Google results for 1 to 10 keywords: position, domain, URL, title, snippet and the result features shown. ${PAID_NOTE}`,

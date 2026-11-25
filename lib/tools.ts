@@ -254,41 +254,117 @@ export const TOOLS: ToolDefinition[] = [
     area: 'search-console',
     kind: 'write',
     description:
-      'Starts the Google Search Console connection for a project and returns a Google link for the human, or the property already connected. Use it before gsc_performance when that tool says Search Console is not connected. Free. The human must open the link and approve in their own browser; you cannot finish it for them.',
+      'Starts the Google Search Console connection for the whole account and returns a Google link for the human. One approval covers every Search Console site of that Google account; call it again to add another Google account. Use it when gsc_sites says Search Console is not connected, before any other SEO work, since the real data is free. Free. The human opens the link, approves read-only access on Google, then finishes on seoforagent.com signed in to this account; you cannot do it for them. When they say it is done, call gsc_sites.',
     price: 'Free',
     method: 'POST',
-    input: { project_id: projectId },
-    pathArgs: ['project_id'],
-    path: (args) => `/products/${segment(args.project_id)}/gsc/connect`,
+    input: {},
+    pathArgs: [],
+    path: () => '/sfa/gsc/connect',
   },
   {
-    name: 'gsc_performance',
-    title: 'Search Console performance',
+    name: 'gsc_sites',
+    title: 'Search Console sites',
     area: 'search-console',
     kind: 'read',
     description:
-      'Returns real clicks, impressions, CTR and position from Google Search Console, by query, page, country, device or date. Use it for the site own traffic; use domain_overview for estimates about other domains. Free. Fails until Search Console is connected with gsc_connect, and the last two or three days are not final yet.',
+      'Returns whether Google Search Console is connected, the connected Google accounts and every site (property) they can read, with the matching project. Call it at the start of SEO work to know which sites have real data; use gsc_overview for their numbers. Free. A site with usable false cannot be read (unverified property or expired Google access).',
+    price: 'Free',
+    method: 'GET',
+    input: { refresh: z.boolean().optional().describe('Reload the site list from Google instead of the 6-hour cache.') },
+    pathArgs: [],
+    path: () => '/sfa/gsc',
+  },
+  {
+    name: 'gsc_overview',
+    title: 'Search Console overview',
+    area: 'search-console',
+    kind: 'read',
+    description:
+      'Returns real clicks, impressions, CTR and position for every connected site at once, for the last 7, 28 or 90 days against the period before, with a daily series. Use it first for "how is my SEO doing", then gsc_insights on the site that moved. Free. Periods end on the last day Google has final data, usually 2 to 3 days ago.',
     price: 'Free',
     method: 'GET',
     input: {
-      project_id: projectId,
+      days: z.union([z.literal(7), z.literal(28), z.literal(90)]).optional().describe('Period length: 7, 28 (default) or 90 days.'),
+      sites: z.string().optional().describe('Only these sites: comma-separated site_url or domain values from gsc_sites.'),
+      refresh: z.boolean().optional().describe('Skip the 1-hour cache.'),
+    },
+    pathArgs: [],
+    path: () => '/sfa/gsc/overview',
+  },
+  {
+    name: 'gsc_insights',
+    title: 'What moved and what to do',
+    area: 'search-console',
+    kind: 'read',
+    description:
+      'Analyses one site in Search Console against the previous period and returns ranked actions with their numbers: pages and queries gaining or losing clicks, queries ranking 8 to 20 (closest to page one) with the page that ranks, results with a click rate far below normal for their position, and new and lost queries. Use it to decide what to work on this week; use gsc_performance to dig into one page or query. Free. Lists are capped at 25 rows each.',
+    price: 'Free',
+    method: 'POST',
+    input: {
+      site: z.string().optional().describe('A site_url or domain from gsc_sites. Or send project_id.'),
+      project_id: optionalProjectId,
+      days: z.number().int().min(7).max(90).optional().describe('Period length in days. Default 28.'),
+    },
+    pathArgs: [],
+    path: () => '/sfa/gsc/insights',
+  },
+  {
+    name: 'gsc_performance',
+    title: 'Search Console report',
+    area: 'search-console',
+    kind: 'read',
+    description:
+      'Returns real clicks, impressions, CTR and position from Google Search Console for one site, grouped by query, page, country, device, date or search appearance, with filters and an optional comparison with the previous period. Use it for any custom question about the site own traffic; use domain_overview for estimates about other domains. Free. ctr is a fraction and position an average (lower is better); the last 2 to 3 days are not in Google data yet.',
+    price: 'Free',
+    method: 'POST',
+    input: {
+      site: z.string().optional().describe('A site_url or domain from gsc_sites. Or send project_id.'),
+      project_id: optionalProjectId,
       dimensions: z
-        .array(z.enum(['query', 'page', 'country', 'device', 'date']))
+        .array(z.enum(['query', 'page', 'country', 'device', 'date', 'searchAppearance']))
         .min(1)
-        .max(3)
+        .max(4)
         .optional()
         .describe('Group rows by these dimensions. Default ["query"].'),
+      days: z.number().int().min(1).max(480).optional().describe('The last N days with data. Default 28. Ignored when start_date and end_date are sent.'),
       start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe('YYYY-MM-DD. Send with end_date.'),
       end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe('YYYY-MM-DD. Send with start_date.'),
-      months: z.number().int().min(1).max(16).optional().describe('Instead of dates: the last N months.'),
-      limit: z.number().int().min(1).max(1000).optional().describe('Rows to return.'),
-      query: z.string().optional().describe('Only rows whose query contains this text.'),
-      page: z.string().optional().describe('Only rows whose page URL contains this text.'),
-      country: z.string().optional().describe('Three-letter country code, for example "usa".'),
-      device: z.enum(['DESKTOP', 'MOBILE', 'TABLET']).optional(),
+      compare: z.boolean().optional().describe('Add the previous period of the same length: *_prev fields, clicks_change and position_change.'),
+      filters: z
+        .object({
+          query_contains: z.string().optional(),
+          query_not_contains: z.string().optional(),
+          query_equals: z.string().optional(),
+          page_contains: z.string().optional(),
+          page_not_contains: z.string().optional(),
+          page_equals: z.string().optional(),
+          country: z.string().optional().describe('Three-letter country code, for example "usa".'),
+          device: z.enum(['DESKTOP', 'MOBILE', 'TABLET']).optional(),
+        })
+        .optional()
+        .describe('Row filters, all combined with AND.'),
+      search_type: z.enum(['web', 'image', 'video', 'news', 'discover', 'googleNews']).optional().describe('Default web.'),
+      order_by: z.enum(['clicks', 'impressions', 'ctr', 'position']).optional().describe('Default clicks (position sorts best first).'),
+      row_limit: z.number().int().min(1).max(5000).optional().describe('Rows to return, up to 5,000. Default 100.'),
     },
-    pathArgs: ['project_id'],
-    path: (args) => `/products/${segment(args.project_id)}/gsc/search-analytics`,
+    pathArgs: [],
+    path: () => '/sfa/gsc/query',
+  },
+  {
+    name: 'gsc_inspect_url',
+    title: 'Inspect a URL in Google',
+    area: 'search-console',
+    kind: 'read',
+    description:
+      'Asks Google Search Console whether one page is indexed and why not: coverage state, last crawl, robots.txt and fetch state, the canonical Google chose, mobile usability and rich results. Use it when a page gets no impressions or lost its traffic; use gsc_performance for its numbers. Free. Google allows about 2,000 inspections a day per site.',
+    price: 'Free',
+    method: 'POST',
+    input: {
+      url: z.string().url().describe('The full page URL to inspect, on a connected site.'),
+      site: z.string().optional().describe('The site_url to inspect it under. Defaults to the property that covers the URL.'),
+    },
+    pathArgs: [],
+    path: () => '/sfa/gsc/inspect',
   },
   {
     name: 'keywords_research',

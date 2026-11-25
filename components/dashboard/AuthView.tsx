@@ -10,6 +10,7 @@ import { pickBool, pickString } from '@/lib/pick';
 import { buttonDark, buttonSecondary } from '@/lib/styles';
 import { Lockup } from '../Lockup';
 import { Spinner } from '../ui';
+import { GSC_PATH, hasFreshClaim } from './search-console';
 
 type State = { name: 'working' } | { name: 'signed_in' } | { name: 'confirmed'; promoted: boolean } | { name: 'error'; message: string };
 
@@ -58,7 +59,7 @@ export const AuthView = () => {
           window.location.assign(oauthReturn);
           return;
         }
-        router.replace('/app');
+        router.replace(hasFreshClaim() ? GSC_PATH : '/app');
         return;
       }
       if (pickBool(data, ['activated']) || purpose === 'confirm_activation') {

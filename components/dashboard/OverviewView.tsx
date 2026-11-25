@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { lowIncluded, summarizeAccount } from '@/lib/account';
 import { dataOf } from '@/lib/api';
 import { formatUsd } from '@/lib/format';
@@ -10,6 +11,8 @@ import { setupPrompt } from '@/lib/setup';
 import { SHAREABLE_TOOLS } from '@/lib/shared';
 import { CopyButton } from '../CopyButton';
 import { useApiGet, useDashboard } from './context';
+import { hasFreshClaim, GSC_PATH } from './search-console';
+import { OverviewSearchConsoleCard } from './SearchConsoleCards';
 import { ShareControl, shareUrlOf } from './ShareControl';
 import { UpgradeCard } from './UpgradeCard';
 import { Card, EmptyState, ErrorState, Modal, RowsTable, SkeletonRows, Stat, downloadCsv, relativeTime, shortDate } from './widgets';
@@ -112,7 +115,11 @@ const ResultDrawer = ({ row, onClose }: { row: Row | null; onClose: () => void }
 };
 
 export const OverviewView = () => {
+  const router = useRouter();
   const { whoami, whoamiLoading } = useDashboard();
+  useEffect(() => {
+    if (hasFreshClaim()) router.replace(GSC_PATH);
+  }, [router]);
   const activity = useApiGet('/sfa/activity', { limit: 50 });
   const [selected, setSelected] = useState<Row | null>(null);
   const summary = whoami?.ok ? summarizeAccount(whoami.data) : null;
@@ -129,6 +136,8 @@ export const OverviewView = () => {
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
+
+      <OverviewSearchConsoleCard />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Stat

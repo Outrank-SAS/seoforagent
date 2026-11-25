@@ -10,10 +10,12 @@ import { getActiveKey, keySuffix, signOut as clearKey } from '@/lib/keys';
 import { buttonPrimary, buttonSecondary } from '@/lib/styles';
 import { Lockup } from '../Lockup';
 import { DashboardContext } from './context';
+import { stashClaimFromUrl } from './search-console';
 import { SignIn } from './SignIn';
 
 const NAV = [
   { href: '/app', label: 'Overview', icon: 'M3 12l9-8 9 8M5 10v10h14V10' },
+  { href: '/app/search-console', label: 'Search Console', short: 'Search', icon: 'M4 11a7 7 0 1 0 14 0a7 7 0 1 0-14 0M21 21l-5.2-5.2M8 13l2-2 2 2 3-4' },
   { href: '/app/billing', label: 'Plan and credit', icon: 'M3 7h18v10H3zM3 11h18' },
   { href: '/app/projects', label: 'Projects', icon: 'M4 5h16v14H4zM4 9h16' },
   { href: '/app/keys', label: 'Keys', icon: 'M14 10a4 4 0 1 1-1.2-2.8L21 7v3h-2v2h-2l-2.2 2.2' },
@@ -35,6 +37,12 @@ export const DashboardShell = ({ children }: { children: React.ReactNode }) => {
   const [whoami, setWhoami] = useState<Envelope | null>(null);
   const [whoamiStatus, setWhoamiStatus] = useState(0);
   const [whoamiLoading, setWhoamiLoading] = useState(true);
+  const [claimWaiting, setClaimWaiting] = useState(false);
+
+  useEffect(() => {
+    const waiting = stashClaimFromUrl();
+    queueMicrotask(() => setClaimWaiting(waiting));
+  }, [pathname]);
 
   useEffect(() => {
     const stored = getActiveKey();
@@ -85,7 +93,7 @@ export const DashboardShell = ({ children }: { children: React.ReactNode }) => {
       </div>
     );
   }
-  if (!apiKey) return <SignIn onSignedIn={(key) => setApiKey(key)} />;
+  if (!apiKey) return <SignIn onSignedIn={(key) => setApiKey(key)} notice={claimWaiting ? 'Sign in to finish connecting Search Console.' : undefined} />;
 
   const summary = whoami?.ok ? summarizeAccount(whoami.data) : null;
   const keyRejected = !whoamiLoading && whoami && !whoami.ok && (whoamiStatus === 401 || INVALID_KEY_CODES.includes(whoami.error?.code ?? ''));
@@ -168,7 +176,7 @@ export const DashboardShell = ({ children }: { children: React.ReactNode }) => {
           </main>
         </div>
 
-        <nav aria-label="Dashboard" className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 border-t border-line bg-white md:hidden">
+        <nav aria-label="Dashboard" className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-6 border-t border-line bg-white md:hidden">
           {NAV.map((item) => (
             <Link
               key={item.href}
@@ -177,7 +185,7 @@ export const DashboardShell = ({ children }: { children: React.ReactNode }) => {
               className={`flex min-h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-medium ${isActive(pathname, item.href) ? 'text-accent' : 'text-muted'}`}
             >
               <NavIcon path={item.icon} />
-              {item.label === 'Plan and credit' ? 'Billing' : item.label}
+              {item.label === 'Plan and credit' ? 'Billing' : (item.short ?? item.label)}
             </Link>
           ))}
           <button type="button" onClick={signOut} className="flex min-h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-medium text-muted">

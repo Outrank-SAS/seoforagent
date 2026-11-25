@@ -66,6 +66,7 @@ export const routeOf = (tool: ToolDefinition): string => {
 };
 
 export const BILLING_POINTS = [
+  'Google Search Console tools are free: connect once with gsc_connect and every site of that Google account is readable. Results are cached for an hour; Google data is final about 2 to 3 days after the fact.',
   'Every price is in US dollars. Plans include a monthly amount of usage; one-time credit is spent after it and does not reset.',
   'A paid call is held at its upper estimate, then charged its actual cost. Data tools cost the provider price × 1.28, rounded up to $0.001 with a $0.001 minimum. AI checks, the AI visibility diagnosis and listicle tools have fixed prices.',
   'Every paid response carries cost.charged_usd, cost.included_left_usd and cost.credit_left_usd, plus a result_id you can re-read for free for 30 days with results_get.',
@@ -112,6 +113,14 @@ export const CURL_EXAMPLES: { title: string; code: string }[] = [
   {
     title: 'Price a keyword research call without running it',
     code: `curl -X POST ${PUBLIC_API_BASE}/sfa/keywords/research \\\n  -H "Authorization: Bearer $SEOFORAGENT_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '{"seeds":["ai video editor"],"limit":150,"dry_run":true}'`,
+  },
+  {
+    title: 'Every site in Search Console, last 28 days against the 28 before',
+    code: `curl "${PUBLIC_API_BASE}/sfa/gsc/overview?days=28" \\\n  -H "Authorization: Bearer $SEOFORAGENT_API_KEY"`,
+  },
+  {
+    title: 'What moved on one site and what to do',
+    code: `curl -X POST ${PUBLIC_API_BASE}/sfa/gsc/insights \\\n  -H "Authorization: Bearer $SEOFORAGENT_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '{"site":"example.com","days":28}'`,
   },
   {
     title: 'Ask four AI assistants about your brand',

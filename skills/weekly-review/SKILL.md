@@ -1,6 +1,6 @@
 ---
 name: weekly-review
-description: Run a weekly SEO and AI visibility review for a website with SEOforAgent. Rechecks rankings, reads Search Console, checks backlink placements and spend, then proposes three priced actions for the week. Use it when the person asks for a weekly report, a status update, or what to do this week. Includes how to schedule it.
+description: Run a weekly SEO and AI visibility review for a website with SEOforAgent. Reads Search Console for every site, rechecks rankings, checks backlink placements and spend, then proposes three priced actions for the week. Use it when the person asks for a weekly report, a status update, or what to do this week. Includes how to schedule it.
 ---
 
 # Weekly review
@@ -10,9 +10,9 @@ description: Run a weekly SEO and AI visibility review for a website with SEOfor
 ## Steps
 
 1. Call `whoami` and note the included usage left and the credit. If included usage is under 20%, say so at the top.
-2. Call `projects_get`. Read the research already paid for this week so you do not buy it again.
-3. Call `rank_history` (free). If the last check is older than 6 days, call `rank_check` on the tracked keywords with `max_cost_usd: 0.40` (up to $0.028 per keyword).
-4. If Search Console is connected, call `gsc_performance` for the last 7 days against the 7 before, by query and by page (free). Note the biggest gains and drops.
+2. Call `gsc_overview` with `days: 7` (free): clicks and impressions of every site against the week before. Then `gsc_insights` with `days: 7` on the site that moved most (free) for the pages and queries behind it and what to do. If Search Console is not connected, offer `gsc_connect` once.
+3. Call `projects_get`. Read the research already paid for this week so you do not buy it again.
+4. Call `rank_history` (free). If the last check is older than 6 days, call `rank_check` on the tracked keywords with `max_cost_usd: 0.40` (up to $0.028 per keyword).
 5. Call `backlinks_placements` and `backlinks_buying_get` (free): new live links by product (backlink or listicle), lost links (refunded in credits), what each product spent of its monthly budget, and credits left.
 6. Call `listicles_list` (free) for any pages still to pitch.
 7. Call `ai_visibility_report` (free): the share of AI answers that mention the brand in each check of the last 30 days, and the latest diagnosis. Report the trend, and which actions of that plan are still open. If the newest check has no diagnosis and the brand is left out, offer `ai_visibility_diagnose` ($0.30).

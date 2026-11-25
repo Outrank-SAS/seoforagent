@@ -22,8 +22,8 @@ const AGENT_NAMES = ['Claude', 'ChatGPT', 'Codex', 'Cursor'];
 const OUTCOMES = [
   {
     title: 'Rank on Google',
-    body: 'Your agent finds the keywords you can win, reads who ranks today, tracks your positions and plans the links that move them.',
-    tools: ['keywords_research', 'serp_results', 'domain_keywords', 'gsc_performance', 'rank_check', 'backlinks_suggest'],
+    body: 'Connect Google Search Console once and your agent reads the real clicks of every site you own, sees which pages and queries moved, then finds the keywords you can win and plans the links that move them.',
+    tools: ['gsc_overview', 'gsc_insights', 'keywords_research', 'serp_results', 'rank_check', 'backlinks_suggest'],
   },
   {
     title: 'Get cited by AI',
@@ -33,6 +33,12 @@ const OUTCOMES = [
 ];
 
 const CAPABILITIES = [
+  {
+    title: 'Search Console, every site',
+    body: 'Connect Google once and your agent reads the real clicks, impressions and positions of every site you own, sees what moved, and turns it into the fixes for this week.',
+    price: 'Free',
+    href: '/docs#tool-gsc_overview',
+  },
   {
     title: 'SEO data',
     body: 'Keyword research, live Google results, domain traffic, backlink profiles and rank checks, from the same provider the big tools use.',
@@ -214,7 +220,7 @@ const HomePage = async () => {
 
         <section aria-labelledby="capabilities" className="mx-auto max-w-6xl px-4 pt-28 sm:px-6">
           <SectionHeading id="capabilities" title="What your agent can do" subtitle="Real data, real lists, real links. Priced per call in dollars." />
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
+          <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {CAPABILITIES.map((item) => (
               <Link
                 key={item.title}

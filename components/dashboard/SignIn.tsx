@@ -8,7 +8,7 @@ import { buttonDark, buttonSecondary, inputClass } from '@/lib/styles';
 import { Lockup } from '../Lockup';
 import { Spinner } from '../ui';
 
-export const SignIn = ({ onSignedIn }: { onSignedIn: (key: string) => void }) => {
+export const SignIn = ({ onSignedIn, notice }: { onSignedIn: (key: string) => void; notice?: string }) => {
   const id = useId();
   const [key, setKey] = useState('');
   const [keyState, setKeyState] = useState<{ busy: boolean; error: string | null }>({ busy: false, error: null });
@@ -62,6 +62,12 @@ export const SignIn = ({ onSignedIn }: { onSignedIn: (key: string) => void }) =>
             .
           </p>
         </div>
+
+        {notice ? (
+          <p role="status" className="rounded-xl bg-accent-soft p-3 text-sm font-medium text-accent-hover">
+            {notice}
+          </p>
+        ) : null}
 
         <form onSubmit={submitKey} className="flex flex-col gap-3 rounded-2xl border border-line bg-white p-5" noValidate>
           <label htmlFor={`${id}-key`} className="font-semibold">

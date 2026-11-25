@@ -3,16 +3,15 @@
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useEffect, useId, useRef, useState } from 'react';
-import { api, dataOf, errorMessage } from '@/lib/api';
+import { dataOf } from '@/lib/api';
 import { formatUsd } from '@/lib/format';
 import { pick, pickArray, pickBool, pickNumber, pickString, pickUsd } from '@/lib/pick';
-import { buttonSecondary } from '@/lib/styles';
-import { Spinner } from '../ui';
 import { AiVisibilityTab } from './AiVisibilityTab';
 import { BacklinksTab } from './BacklinksTab';
-import { useApiGet, useDashboard } from './context';
+import { useApiGet } from './context';
+import { ProjectSearchConsoleCard } from './SearchConsoleCards';
 import { TrackingCard } from './TrackingCard';
-import { Card, EmptyState, ErrorState, Notice, SkeletonRows, downloadCsv, relativeTime, shortDate } from './widgets';
+import { Card, EmptyState, ErrorState, SkeletonRows, downloadCsv, relativeTime, shortDate } from './widgets';
 
 type Loose = Record<string, unknown>;
 type TabId = 'overview' | 'ai' | 'rankings' | 'listicles' | 'backlinks';
@@ -38,21 +37,7 @@ const ContextRow = ({ label, values }: { label: string; values: string[] | strin
 );
 
 const OverviewTab = ({ projectId, project }: { projectId: string; project: Loose }) => {
-  const { apiKey } = useDashboard();
-  const [gsc, setGsc] = useState<{ busy: boolean; message: string | null }>({ busy: false, message: null });
   const recent = pickArray(project, ['recent_calls', 'recent_research', 'research', 'last_calls']);
-  const gscConnected = pickBool(project, ['gsc.connected', 'gsc_connected', 'connections.gsc', 'connections.gsc.connected']) ?? false;
-
-  const connectGsc = async () => {
-    setGsc({ busy: true, message: null });
-    const { envelope } = await api(`/products/${encodeURIComponent(projectId)}/gsc/connect`, { method: 'POST', key: apiKey });
-    const url = pickString(dataOf(envelope), ['url', 'auth_url', 'authorization_url', 'oauth_url']);
-    if (envelope.ok && url.startsWith('https://')) {
-      window.location.assign(url);
-      return;
-    }
-    setGsc({ busy: false, message: envelope.ok ? pickString(envelope, ['agent_guidance'], 'Search Console is already connected.') : errorMessage(envelope) });
-  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -75,20 +60,7 @@ const OverviewTab = ({ projectId, project }: { projectId: string; project: Loose
 
       <TrackingCard projectId={projectId} />
 
-      <Card title="Search Console">
-        <p className="text-muted">
-          {gscConnected ? 'Connected. Your agent can read real clicks and positions with gsc_performance.' : 'Connect Google Search Console so your agent can read your real clicks and positions, for free.'}
-        </p>
-        {!gscConnected ? (
-          <div>
-            <button type="button" className={buttonSecondary} onClick={connectGsc} disabled={gsc.busy}>
-              {gsc.busy ? <Spinner /> : null}
-              Connect Search Console
-            </button>
-          </div>
-        ) : null}
-        {gsc.message ? <Notice>{gsc.message}</Notice> : null}
-      </Card>
+      <ProjectSearchConsoleCard projectId={projectId} domain={pickString(project, ['domain', 'url'])} />
 
       <Card title="Research already paid for">
         {recent.length === 0 ? (

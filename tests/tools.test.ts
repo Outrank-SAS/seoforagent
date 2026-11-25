@@ -16,7 +16,11 @@ const EXPECTED_TOOLS = [
   'projects_get',
   'projects_update',
   'gsc_connect',
+  'gsc_sites',
+  'gsc_overview',
+  'gsc_insights',
   'gsc_performance',
+  'gsc_inspect_url',
   'keywords_research',
   'keywords_metrics',
   'serp_results',
@@ -55,8 +59,12 @@ const EXPECTED_ROUTES: Record<string, { method: string; path: string }> = {
   projects_create: { method: 'POST', path: '/sfa/projects' },
   projects_get: { method: 'GET', path: '/sfa/projects/prj_1' },
   projects_update: { method: 'PATCH', path: '/sfa/projects/prj_1' },
-  gsc_connect: { method: 'POST', path: '/products/prj_1/gsc/connect' },
-  gsc_performance: { method: 'GET', path: '/products/prj_1/gsc/search-analytics' },
+  gsc_connect: { method: 'POST', path: '/sfa/gsc/connect' },
+  gsc_sites: { method: 'GET', path: '/sfa/gsc' },
+  gsc_overview: { method: 'GET', path: '/sfa/gsc/overview' },
+  gsc_insights: { method: 'POST', path: '/sfa/gsc/insights' },
+  gsc_performance: { method: 'POST', path: '/sfa/gsc/query' },
+  gsc_inspect_url: { method: 'POST', path: '/sfa/gsc/inspect' },
   keywords_research: { method: 'POST', path: '/sfa/keywords/research' },
   keywords_metrics: { method: 'POST', path: '/sfa/keywords/metrics' },
   serp_results: { method: 'POST', path: '/sfa/serp' },
@@ -113,11 +121,18 @@ describe('tool registry', () => {
   });
 
   it('sends GET arguments as query parameters', () => {
-    const tool = TOOL_BY_NAME.get('gsc_performance')!;
-    const request = buildRequest(tool, { project_id: 'prj_1', dimensions: ['query', 'page'], limit: 50 });
+    const tool = TOOL_BY_NAME.get('gsc_overview')!;
+    const request = buildRequest(tool, { days: 90, sites: 'acme.com,other.io' });
     expect(request.body).toBeUndefined();
-    expect(request.query.get('dimensions')).toBe('query,page');
-    expect(request.query.get('limit')).toBe('50');
+    expect(request.query.get('days')).toBe('90');
+    expect(request.query.get('sites')).toBe('acme.com,other.io');
+  });
+
+  it('sends Search Console report arguments in the body', () => {
+    const tool = TOOL_BY_NAME.get('gsc_performance')!;
+    const request = buildRequest(tool, { site: 'sc-domain:acme.com', dimensions: ['query', 'page'], compare: true, filters: { page_contains: '/blog' } });
+    expect(request.method).toBe('POST');
+    expect(request.body).toEqual({ site: 'sc-domain:acme.com', dimensions: ['query', 'page'], compare: true, filters: { page_contains: '/blog' } });
   });
 
   it('encodes ids in paths', () => {
