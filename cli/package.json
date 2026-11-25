@@ -5,7 +5,7 @@
   "license": "MIT",
   "type": "module",
   "bin": {
-    "seoforagent": "./bin/seoforagent.mjs"
+    "seoforagent": "bin/seoforagent.mjs"
   },
   "files": [
     "bin",

@@ -1,0 +1,53 @@
+name: Publish CLI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - cli/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: publish-cli
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cli
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      - name: Use an npm that supports trusted publishing
+        run: npm install -g npm@latest
+
+      - name: Check whether this version is already on npm
+        id: version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          if npm view "seoforagent@$VERSION" version >/dev/null 2>&1; then
+            echo "published=true" >> "$GITHUB_OUTPUT"
+            echo "seoforagent@$VERSION is already on npm, nothing to publish."
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Smoke test
+        if: steps.version.outputs.published == 'false'
+        run: node bin/seoforagent.mjs help | grep -q "seoforagent ${{ steps.version.outputs.version }}"
+
+      - name: Publish
+        if: steps.version.outputs.published == 'false'
+        run: npm publish --access public
