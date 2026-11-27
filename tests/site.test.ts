@@ -262,6 +262,26 @@ describe('shared results', () => {
     const empty = parseDiagnosis(null);
     expect(empty).toMatchObject({ brand: '', verdict: '', reasons: [], actions: [], whoWins: [], pages: [], prompts: [], limits: [], citedPages: null });
     expect(empty.score).toEqual({ answers: 0, mentioned: 0, cited: 0, missed: 0, prompts: 0, engines: [] });
+    expect(empty.moreIdeas).toEqual([]);
+  });
+
+  it('reads more ideas and drops a helper without a safe link', () => {
+    const diagnosis = parseDiagnosis({
+      more_ideas: [
+        {
+          id: 'reddit_threads',
+          title: 'Get recommended in Reddit threads',
+          why: 'Threads rank.',
+          how: 'Answer first.',
+          helper: { name: 'Bazzly', what: 'Finds threads.', relation: 'A sister company of Outrank.', url: 'https://www.bazzly.ai/?utm_source=seoforagent' },
+        },
+        { id: 'quotable_data', title: 'Publish a number', helper: { name: 'Bad', url: 'javascript:alert(1)' } },
+        { id: 'untitled' },
+      ],
+    });
+    expect(diagnosis.moreIdeas).toHaveLength(2);
+    expect(diagnosis.moreIdeas[0].helper).toEqual({ name: 'Bazzly', what: 'Finds threads.', relation: 'A sister company of Outrank.', url: 'https://www.bazzly.ai/?utm_source=seoforagent' });
+    expect(diagnosis.moreIdeas[1].helper).toBeNull();
   });
 
   it('refuses other tools, bad tokens and unsafe links', () => {

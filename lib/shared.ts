@@ -98,6 +98,21 @@ export interface DiagnosisAction {
   outrank: DiagnosisOutrank | null;
 }
 
+export interface DiagnosisIdeaHelper {
+  name: string;
+  what: string;
+  relation: string;
+  url: string;
+}
+
+export interface DiagnosisIdea {
+  id: string;
+  title: string;
+  why: string;
+  how: string;
+  helper: DiagnosisIdeaHelper | null;
+}
+
 export interface DiagnosisWinner {
   name: string;
   domain: string;
@@ -143,6 +158,7 @@ export interface Diagnosis {
   pages: DiagnosisPage[];
   prompts: DiagnosisPrompt[];
   limits: string[];
+  moreIdeas: DiagnosisIdea[];
 }
 
 export interface SharedResult {
@@ -260,6 +276,13 @@ const parseDraft = (value: unknown): DiagnosisDraft | null => {
   return draft.pageTitle || draft.pageAngle || draft.rewarded ? draft : null;
 };
 
+const parseIdeaHelper = (value: unknown): DiagnosisIdeaHelper | null => {
+  const name = pickString(value, ['name']);
+  const url = safeHttpUrl(pickString(value, ['url']));
+  if (!name || !url || !url.startsWith('https://')) return null;
+  return { name, what: pickString(value, ['what']), relation: pickString(value, ['relation']), url };
+};
+
 export const parseDiagnosis = (data: unknown): Diagnosis => {
   const answers = pickNumber(data, ['score.answers']) ?? 0;
   const mentioned = pickNumber(data, ['score.mentioned']) ?? 0;
@@ -342,6 +365,15 @@ export const parseDiagnosis = (data: unknown): Diagnosis => {
       })
       .filter((row) => row.prompt),
     limits: strings(pick(data, ['limits'])),
+    moreIdeas: pickArray(data, ['more_ideas'])
+      .map((row) => ({
+        id: pickString(row, ['id']),
+        title: pickString(row, ['title']),
+        why: pickString(row, ['why']),
+        how: pickString(row, ['how']),
+        helper: parseIdeaHelper(row.helper),
+      }))
+      .filter((row) => row.title),
   };
 };
 

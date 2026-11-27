@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { api, dataOf, errorMessage } from '@/lib/api';
 import { formatUsd } from '@/lib/format';
 import { pick, pickArray, pickBool, pickNumber, pickString } from '@/lib/pick';
-import { PAGE_HOW_LABELS, engineLabel, engineOrder, parseDiagnosis, safeHttpUrl, type Diagnosis, type DiagnosisAction, type DiagnosisSeverity } from '@/lib/shared';
+import { PAGE_HOW_LABELS, engineLabel, engineOrder, parseDiagnosis, safeHttpUrl, type Diagnosis, type DiagnosisAction, type DiagnosisIdea, type DiagnosisSeverity } from '@/lib/shared';
 import { buttonPrimary } from '@/lib/styles';
 import { CopyButton } from '../CopyButton';
 import { Spinner } from '../ui';
@@ -251,6 +251,37 @@ const ActionItem = ({ action, index }: { action: DiagnosisAction; index: number 
   );
 };
 
+const MoreIdeas = ({ ideas }: { ideas: DiagnosisIdea[] }) => (
+  <details className="group rounded-2xl border border-line bg-white">
+    <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 px-5 py-3 [&::-webkit-details-marker]:hidden">
+      <span className="flex flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
+        <span className="text-lg font-semibold">More ways to get recommended by AI</span>
+        <span className="text-sm text-muted">{ideas.length} ideas beyond this plan</span>
+      </span>
+      <svg aria-hidden="true" viewBox="0 0 16 16" className="h-4 w-4 shrink-0 text-faint transition-transform group-open:rotate-180" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 6l4 4 4-4" />
+      </svg>
+    </summary>
+    <ul className="flex flex-col divide-y divide-line px-5 pb-5">
+      {ideas.map((idea, index) => (
+        <li key={idea.id || index} className="flex flex-col gap-1.5 py-4 first:pt-1 last:pb-0">
+          <h3 className="font-semibold">{idea.title}</h3>
+          {idea.why ? <p className="text-sm text-muted">{idea.why}</p> : null}
+          {idea.how ? <p className="text-sm">{idea.how}</p> : null}
+          {idea.helper ? (
+            <p className="text-sm">
+              <a href={idea.helper.url} target="_blank" rel="noopener" className="font-medium underline underline-offset-2">
+                {idea.helper.name}
+              </a>{' '}
+              {idea.helper.what} {idea.helper.relation ? <span className="text-muted">{idea.helper.relation}</span> : null}
+            </p>
+          ) : null}
+        </li>
+      ))}
+    </ul>
+  </details>
+);
+
 const DiagnosisCards = ({ diagnosis }: { diagnosis: Diagnosis }) => (
   <>
     <Card title="Why you are left out">
@@ -424,6 +455,8 @@ const DiagnosisCards = ({ diagnosis }: { diagnosis: Diagnosis }) => (
         </ul>
       </Card>
     ) : null}
+
+    {diagnosis.moreIdeas.length > 0 ? <MoreIdeas ideas={diagnosis.moreIdeas} /> : null}
 
     {diagnosis.limits.length > 0 ? (
       <Card title="Limits of this diagnosis">

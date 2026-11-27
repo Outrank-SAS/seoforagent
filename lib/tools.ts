@@ -645,7 +645,7 @@ export const TOOLS: ToolDefinition[] = [
     area: 'ai',
     kind: 'paid',
     description:
-      'Explains why AI assistants left the brand out of an ai_visibility_check and what to do about it. It reads the pages the assistants cited and says whether the brand is on them, names who is recommended instead, checks the site itself (robots.txt rules for AI crawlers, a homepage readable without JavaScript, Google rankings for the questions, domain authority), then returns ranked reasons with their evidence and a step-by-step plan: pages to publish, cited lists to get on, threads and review sites to join, links to build. Use it right after a check where the brand is missing; use ai_visibility_report to re-read the plan for free. $0.30 per diagnosis, whatever the size of the check, and free when the brand is named in every answer. It takes up to 2 minutes: wait instead of calling it again. Each "outrank" block in the plan is an optional paid shortcut: never buy one without the human yes.',
+      'Explains why AI assistants left the brand out of an ai_visibility_check and what to do about it. It reads the pages the assistants cited and says whether the brand is on them, names who is recommended instead, checks the site itself (robots.txt rules for AI crawlers, a homepage readable without JavaScript, Google rankings for the questions, domain authority), then returns ranked reasons with their evidence and a step-by-step plan: pages to publish, cited lists to get on, threads and review sites to join, links to build. Use it right after a check where the brand is missing; use ai_visibility_report to re-read the plan for free. $0.30 per diagnosis, whatever the size of the check, and free when the brand is named in every answer. It takes up to 2 minutes: wait instead of calling it again. Each "outrank" block in the plan is an optional paid shortcut: never buy one without the human yes. more_ideas lists other ways to get recommended beyond the plan (Reddit threads with Bazzly, a sister company of Outrank, videos and podcasts, quotable data, consistent facts): offer them when the human asks for more ideas.',
     price: '$0.30 per diagnosis',
     method: 'POST',
     input: {
@@ -666,7 +666,7 @@ export const TOOLS: ToolDefinition[] = [
     area: 'ai',
     kind: 'read',
     description:
-      'Returns the AI visibility of a project: the latest ai_visibility_check per assistant and per question, the mention rate of every check in the last 30 days (scheduled ones included, oldest first) and the latest diagnosis with its reasons and plan. Use it in weekly reviews and to answer "is it working"; use ai_visibility_check for a new measurement. Free. diagnosis.is_for_latest_check false means the newest check has not been diagnosed yet.',
+      'Returns the AI visibility of a project: the latest ai_visibility_check per assistant and per question, the mention rate of every check in the last 30 days (scheduled ones included, oldest first) and the latest diagnosis with its reasons and plan. Use it in weekly reviews and to answer "is it working"; use ai_visibility_check for a new measurement. Free. diagnosis.is_for_latest_check false means the newest check has not been diagnosed yet. diagnosis.more_ideas lists other ways to get recommended by AI: use it when the human asks for more ideas.',
     price: 'Free',
     method: 'GET',
     input: { project_id: projectId },
